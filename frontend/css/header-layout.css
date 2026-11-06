@@ -1,0 +1,101 @@
+/* Keep the title on the left and the notification/account controls at the far right. */
+body .app main > header {
+  display: grid !important;
+  grid-template-columns: auto auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  width: 100% !important;
+}
+
+body .app main > header > .grow {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 1px !important;
+  flex: initial !important;
+}
+
+body .app main > header > .header-tools {
+  display: flex !important;
+  grid-column: 4 !important;
+  align-items: center !important;
+  justify-self: end !important;
+  gap: 7px !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  margin: 0 0 0 auto !important;
+}
+
+body .app main > header .header-bell {
+  display: grid !important;
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  appearance: none !important;
+  border: 1px solid transparent !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body .app main > header .header-account {
+  display: flex !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 3px 4px 3px 8px !important;
+  appearance: none !important;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body .app main > header .header-user-name {
+  display: inline-block !important;
+  max-width: 150px !important;
+  overflow: hidden !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+body .app main > header .header-user-meta {
+  display: grid !important;
+  min-width: 0 !important;
+  justify-items: end !important;
+  gap: 2px !important;
+  line-height: 1.15 !important;
+}
+
+body .app main > header .header-user-role {
+  display: block !important;
+  color: #8492a2 !important;
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+}
+
+body .app main > header .header-account img.header-avatar {
+  display: block !important;
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+}
+
+@media (max-width: 800px) {
+  body .app main > header { column-gap: 9px !important; }
+  body .app main > header > .header-tools { gap: 5px !important; }
+  body .app main > header .header-user-name { max-width: 95px !important; }
+}
+
+@media (max-width: 420px) {
+  body .app main > header { grid-template-columns: auto minmax(0, 1fr) auto !important; }
+  body .app main > header > .grow { display: none !important; }
+  body .app main > header > .header-tools { grid-column: 3 !important; }
+}

@@ -1,0 +1,83 @@
+FALLGUARD - CAI DAT VA CHAY TREN MAY TINH / DIEN THOAI
+=====================================================
+
+DUONG DAN DU AN HIEN TAI: C:\detect
+Backend can chay: C:\detect\fall_detection_lstm\backend\main.py
+Frontend: C:\detect\frontend\index.html
+Khong chay backend\main.py o thu muc goc C:\detect; do la backend khac.
+
+1. CAI DAT LAN DAU (CHI LAM MOT LAN)
+------------------------------------
+Mo PowerShell. Chay tung lenh:
+
+    cd C:\detect
+    py -3.13 -m venv .venv
+    .\.venv\Scripts\python.exe -m pip install --upgrade pip
+    .\.venv\Scripts\python.exe -m pip install -r .\fall_detection_lstm\requirements.txt
+    .\.venv\Scripts\python.exe -m pip install -r .\fall_detection_lstm\backend\requirements.txt
+    .\.venv\Scripts\python.exe -m pip install pywebpush
+
+Can Python 3.10-3.13. Neu may chua co Python, cai Python truoc.
+Lan cai PyTorch co the mat nhieu thoi gian va can Internet.
+
+2. MO TREN MAY TINH
+-------------------
+    cd C:\detect
+    $env:MPLCONFIGDIR = "C:\detect\.cache\matplotlib"
+    $env:YOLO_CONFIG_DIR = "C:\detect\.cache\ultralytics"
+    New-Item -ItemType Directory -Force $env:MPLCONFIGDIR, $env:YOLO_CONFIG_DIR
+    .\.venv\Scripts\python.exe -m uvicorn backend.main:app --app-dir .\fall_detection_lstm --host 127.0.0.1 --port 8000
+
+3. MO TREN DIEN THOAI (IPHONE / ANDROID)
+-----------------------------------------
+Dien thoai can HTTPS de cho phep camera. Khong dung localhost cua may tinh tren
+dien thoai. Tren PowerShell, chay script tunnel (khong can chay backend rieng truoc):
+
+    cd C:\detect
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+    .\start-web-public.ps1
+
+Script se tu bat backend va Cloudflare Tunnel. Lan dau co the tu tai cloudflared;
+may can Internet. Neu chua tao .venv, chay phan CAI DAT LAN DAU o muc 1 truoc.
+Neu PowerShell bao chua co module FastAPI/Uvicorn, cai dependencies bang cac lenh
+o muc 1.
+
+Doi den khi PowerShell hien dia chi dang https://....trycloudflare.com, dung dien
+thoai quet/mo dia chi do. Dang nhap va cho phep camera khi trinh duyet hoi. Giu cua so
+PowerShell tunnel mo trong suot luc su dung. Bam Ctrl+C de dung tunnel va backend.
+
+Cai ra man hinh chinh:
+- iPhone: mo bang Safari > Chia se > Them vao man hinh chinh.
+- Android: mo bang Chrome > menu ba cham > Cai dat ung dung / Them vao man hinh chinh.
+
+Dia chi trycloudflare mien phi thay doi moi lan chay; mo URL moi khi khoi dong lai.
+URL tunnel co the truy cap cong khai, chi chia se cho nguoi duoc phep.
+
+4. DANG NHAP VA SU DUNG
+-----------------------
+Tai khoan quan tri:
+    Email: admin@gmail.com
+    Mat khau: admin123@
+
+Tai khoan khach:
+- Khach tu dang ky tren man hinh dang nhap; tai khoan se o trang thai cho duyet.
+- Admin vao menu Quan ly tai khoan > Yeu cau cho duyet > Chap nhan/Tu choi.
+- Admin co the bam Cap tai khoan de tao tai khoan da duoc phep vao ngay.
+- Chi tai khoan duoc duyet moi dang nhap va dung camera/video.
+
+Vao Camera & thiet bi, them/bat camera va cap quyen webcam. Chon tep video de phan
+tich; trang tu gui video len backend. Khong dong cua so backend trong luc AI xu ly.
+
+5. LOI THUONG GAP
+-----------------
+- Backend khong ket noi: dam bao cua so backend con chay; mo
+  http://127.0.0.1:8000/api/health de kiem tra.
+- Port 8000 dang ban: dung server cu bang Ctrl+C truoc. Khong chay hai backend cung cong.
+- Thieu module: chay lai cac lenh pip install trong muc 1 bang dung Python cua .venv.
+- Dien thoai khong mo duoc camera: dung URL HTTPS trycloudflare, khong dung HTTP,
+  va cho phep Camera trong cai dat trinh duyet.
+- Mat khau khong dang nhap duoc: du lieu tai khoan nam trong
+  C:\detect\fall_detection_lstm\backend\data\users.json.
+
+Khong xoa thu muc fall_detection_lstm\backend\data neu can giu tai khoan, camera,
+lich su canh bao va video da phan tich.

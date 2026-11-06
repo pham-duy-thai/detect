@@ -1,0 +1,26 @@
+body,
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+  header {
+    height: calc(76px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    padding-left: calc(38px + env(safe-area-inset-left));
+    padding-right: calc(38px + env(safe-area-inset-right));
+  }
+
+  .sidebar {
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  @media (max-width: 800px) {
+    header {
+      padding-left: calc(20px + env(safe-area-inset-left));
+      padding-right: calc(20px + env(safe-area-inset-right));
+    }
+  }
+}

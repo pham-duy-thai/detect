@@ -1,0 +1,554 @@
+/* Fluid shell and component sizing. Loaded last to normalize legacy page styles. */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  margin: 0;
+  padding: 0;
+  background-color: #0b1120;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: clamp(14.5rem, 17vw, 16.5rem) minmax(0, 1fr);
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+.app > .sidebar {
+  position: sticky !important;
+  inset: 0 auto auto 0 !important;
+  width: 100% !important;
+  min-width: 0;
+  height: 100vh;
+  height: 100dvh;
+  align-self: start;
+}
+
+.app > main {
+  width: 100% !important;
+  min-width: 0;
+  margin: 0 !important;
+}
+
+.app > main > header {
+  width: 100%;
+  min-width: 0;
+  min-height: 4.5rem;
+  height: auto;
+  padding-block: clamp(.55rem, 1.1vw, .9rem);
+}
+
+body .app > main > header > .header-tools {
+  min-width: 0;
+  max-width: 100%;
+  margin-right: clamp(.5rem, 2vw, 2rem) !important;
+  gap: clamp(.35rem, .8vw, .75rem);
+}
+
+.header-identity,
+.header-account,
+.header-user-meta {
+  min-width: 0;
+}
+
+.header-identity > b,
+.header-user-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#content,
+.content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+}
+
+#root,
+.app-container,
+main {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.content {
+  padding: clamp(1rem, 2.2vw, 2rem) !important;
+}
+
+.content :is(h1, h2, h3, p, small, label, a, button, span, b, strong, em) {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.content :is(.panel, .card, article, section, form, .dash-stat, .live-card,
+  .incident-card, .preference-card, .summary-card) {
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+}
+
+.content :is(button, .button, .outline-button, input, select, textarea) {
+  max-width: 100%;
+  height: auto;
+  min-height: 2.5rem;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.content :is(input, select, textarea) {
+  min-width: 0;
+}
+
+.content .heading {
+  min-width: 0;
+  gap: clamp(.75rem, 1.5vw, 1.25rem);
+}
+
+.dashboard-stats {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)) !important;
+}
+
+.cards,
+.camera-summary,
+.summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)) !important;
+  min-width: 0;
+}
+
+.dashboard-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 23.75rem) !important;
+  width: 100%;
+  max-width: 100%;
+  gap: 1rem !important;
+  align-items: start;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 23.75rem);
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.grid,
+.camera-columns,
+.settings-page .settings-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  min-width: 0;
+}
+
+.content > *,
+#content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app :is(main, header, .content, #content, .panel, .card, article, section,
+  form, fieldset, table, .live-card, .camera-card, .incident-card,
+  .event-filter-bar, .event-log-actions, .live-toolbar, .video-preview,
+  .incident-media-viewer, .alert-media-preview) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app :is(img, video, canvas, iframe, table) {
+  max-width: 100%;
+}
+
+.app :is(.panel, .card, article, section, form, fieldset, header) * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.app > main > header > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app > main > header .header-tools > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app .event-log-actions > :is(select, input, textarea, button),
+.app .event-filter-bar > :is(select, input, textarea, button) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app .metric {
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1fr) minmax(1.5rem, auto);
+}
+
+.live-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)) !important;
+}
+
+.live-card,
+.live-preview,
+.live-info,
+.live-alert-card,
+.alert-description,
+.alert-actions {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+}
+
+.live-preview {
+  width: 100%;
+  height: auto !important;
+  min-height: clamp(10rem, 18vw, 17rem);
+  aspect-ratio: 16 / 9;
+}
+
+.camera-preview {
+  width: 100%;
+  height: auto;
+  min-height: clamp(10rem, 18vw, 17rem);
+  aspect-ratio: 16 / 9;
+}
+
+.upload-box {
+  width: 100%;
+  height: auto;
+  min-height: 7rem;
+  padding: clamp(.75rem, 2vw, 1.25rem);
+  text-align: center;
+}
+
+.video-preview,
+.analysis-result .video-preview {
+  width: 100%;
+  height: auto !important;
+  max-height: min(62vh, 32.5rem);
+  object-fit: contain;
+}
+
+.live-info {
+  min-height: 4.5rem;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.live-alert-card {
+  min-height: 0;
+  overflow-wrap: break-word;
+}
+
+.live-alert-body {
+  grid-template-columns: clamp(3.25rem, 5vw, 4.5rem) minmax(0, 1fr);
+}
+
+.alert-description > :is(b, small, strong) {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.alert-actions > * {
+  min-width: 0;
+  min-height: 2.5rem;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.event-filter-bar {
+  display: flex !important;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.event-filter-bar > *,
+.event-filter-bar label {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.event-filter-bar input,
+.event-filter-bar select {
+  width: 100%;
+  min-width: 0;
+}
+
+.event-filter-bar label > input,
+.event-filter-bar label > select {
+  flex: 1 1 12.5rem;
+}
+
+.event-filter-bar button {
+  flex: 0 1 auto;
+  min-width: min(100%, 8rem);
+}
+
+.event-log-actions {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.event-log-actions > * {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+}
+
+.event-log-actions input {
+  flex: 1 1 18rem;
+}
+
+.incident-card,
+.camera-card,
+.summary-card {
+  min-height: 0;
+  overflow-wrap: break-word;
+}
+
+.incident-list,
+.camera-cards,
+.contact-list,
+.settings-grid,
+.analytics-grid {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.incident-title small,
+.incident-media-note,
+.camera-meta,
+.feature-note,
+.settings-note {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.camera-cards,
+.camera-grid,
+.contact-grid,
+.preferences-grid,
+.metrics-grid,
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)) !important;
+}
+
+.events-pagination,
+.events-pagination-actions {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.notification-popup,
+.account-popup,
+.app-modal,
+.modal-card {
+  max-width: min(calc(100vw - 2rem), 42rem);
+}
+
+.incident-title,
+.section-title,
+.camera-info,
+.camera-page-heading {
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.incident-title > div,
+.camera-meta,
+.camera-page-heading > div {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.incident-media-viewer,
+.incident-media-viewer img,
+.incident-media-viewer video {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 75rem) {
+  .dashboard-main {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .live-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)) !important;
+  }
+}
+
+@media (min-width: 56.3125rem) and (max-width: 75rem) {
+  .app {
+    grid-template-columns: minmax(13rem, 15rem) minmax(0, 1fr);
+  }
+
+  .content {
+    padding: clamp(.875rem, 1.5vw, 1.5rem) !important;
+  }
+
+  body .app > main > header > .header-tools {
+    margin-right: .5rem !important;
+  }
+}
+
+@media (max-width: 56.25rem) {
+  .app {
+    display: block;
+  }
+
+  .app > .sidebar {
+    position: fixed !important;
+    z-index: 40 !important;
+    inset: 0 auto 0 0 !important;
+    width: min(86vw, 19rem) !important;
+    max-width: calc(100vw - 2rem);
+    height: 100vh;
+    height: 100dvh;
+    transform: translateX(-105%);
+  }
+
+  .app > .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .app > main {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .app > main > header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    gap: clamp(.35rem, 1vw, .75rem);
+  }
+
+  #menu {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+  }
+
+  .brand button {
+    display: block;
+  }
+
+  .system-health-widget {
+    display: none !important;
+  }
+}
+
+@media (max-width: 47.5rem) {
+  .content {
+    padding: clamp(.75rem, 3.5vw, 1rem) !important;
+  }
+
+  .content .heading {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  .content .heading > :is(button, .button) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)) !important;
+  }
+
+  .live-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .cards,
+  .camera-summary,
+  .summary-grid,
+  .grid,
+  .camera-columns,
+  .settings-page .settings-grid,
+  .camera-cards,
+  .camera-grid,
+  .contact-grid,
+  .preferences-grid,
+  .metrics-grid,
+  .stats-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .live-preview {
+    height: auto !important;
+    min-height: clamp(10rem, 58vw, 17rem);
+  }
+
+  .camera-preview {
+    min-height: clamp(10rem, 58vw, 17rem);
+  }
+
+  .event-filter-bar > *,
+  .event-filter-bar button {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .event-filter-bar input,
+  .event-filter-bar select {
+    min-width: 0;
+  }
+
+  .event-log-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .event-log-actions > * {
+    width: 100%;
+  }
+
+  .alert-actions {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .alert-actions > * {
+    grid-column: 1 !important;
+  }
+}
+
+@media (max-width: 24.375rem) {
+  .dashboard-stats {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .header-identity {
+    min-width: 0;
+  }
+}

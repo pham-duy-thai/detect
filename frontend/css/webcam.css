@@ -1,0 +1,3 @@
+.webcam-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}.camera-preview:has(.webcam-video):after{display:none}.webcam-state{position:absolute;right:10px;bottom:10px;z-index:3;color:#fff;background:#152640cc;padding:6px 8px;border-radius:5px;font-size:9px}.webcam-state.safe{background:#22a879}.webcam-state.bending{background:#d28a18}.webcam-state.fall{background:#db4c55;animation:pulse 1s infinite}@keyframes pulse{50%{box-shadow:0 0 0 5px #db4c5533}}
+
+.keypoint-overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:2;pointer-events:none}.camera-preview:has(.keypoint-overlay):after{display:none}

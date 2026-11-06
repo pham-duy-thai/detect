@@ -1,0 +1,31 @@
+# Local Python environment and caches
+.venv/
+.cache/
+__pycache__/
+*.py[cod]
+
+# Local credentials and runtime data
+*.pem
+backend/data/
+fall_detection_lstm/backend/data/
+*.log
+*.webm
+
+# Source videos are not needed for the application deployment
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Downloaded tunnel binary
+tools/cloudflared.exe
+
+# Large training inputs and generated keypoint arrays
+fall_detection_lstm/fallandnofall/
+fall_detection_lstm/data/*.npy
+fall_detection_lstm/sequences.npy
+fall_detection_lstm/labels.npy
+
+# Nested repository metadata; commit its source as part of this project
+fall_detection_lstm/.git/
+fall_detection_lstm/.git_hold/

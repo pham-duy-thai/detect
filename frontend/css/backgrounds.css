@@ -1,0 +1,2 @@
+/* Backgrounds dùng ảnh có sẵn trong template login; ảnh biển/phong cảnh bạn gửi chưa nằm trong workspace. */
+body{background:linear-gradient(120deg,#0b2940cc,#0b294066),url('../login/images/summit.jpg') center/cover fixed;background-blend-mode:multiply}.admin-main,main{background:linear-gradient(90deg,#f7f8fcee,#f7f8facc)}.cl-login01__art{background:linear-gradient(135deg,#123e5dcc,#122b3a66),url('../login/images/summit.jpg') center/cover}.cl-login01__art img{display:none}.panel,.card,.stat-card,.summary-card{box-shadow:0 8px 28px #17203312}.app-modal{background:#17203399}

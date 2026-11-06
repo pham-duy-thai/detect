@@ -1,0 +1,7 @@
+.video-preview{width:100%;height:180px;display:block;object-fit:contain;background:#101827;border-radius:8px;margin-top:18px}.camera-columns .panel{min-width:0}.camera-columns .upload-box{margin-top:12px}
+
+.fall-video-banner{margin-top:14px;padding:12px 14px;border-radius:9px;background:#eaf8f2;color:#08734e;display:flex;flex-direction:column;gap:4px}.fall-video-banner.is-fall{background:#fff0f0;color:#b42332}.fall-video-banner span{font-size:12px}.fall-alert-toast{position:fixed;z-index:9999;right:20px;top:20px;padding:14px 18px;border-radius:10px;background:#b42332;color:white;font-weight:700;box-shadow:0 12px 40px #0003;opacity:0;transform:translateY(-10px);transition:.2s}.fall-alert-toast.show{opacity:1;transform:translateY(0)}.analysis-result.loading{opacity:.8}
+
+.analysis-result .video-preview{height:min(62vh,520px);margin-top:14px}.analysis-result{scroll-margin-top:24px}
+
+.video-result-caption{margin-top:12px;color:#33466a;font-size:12px;font-weight:700}

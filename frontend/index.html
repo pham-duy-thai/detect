@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CareCam AI">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="apple-touch-icon" href="assets/images/favicon_io/apple-touch-icon.png">
+  <title>CareCam AI | Fall Detection System</title>
+  <link rel="icon" href="assets/images/favicon_io/favicon-32x32.png">
+  <link rel="stylesheet" href="css/reset-base.css?v=1">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pro.css">
+  <link rel="stylesheet" href="css/webcam.css">
+  <link rel="stylesheet" href="css/notifications.css">
+  <link rel="stylesheet" href="css/video-preview.css?v=6">
+  <link rel="stylesheet" href="login/style.css">
+  <link rel="stylesheet" href="css/auth.css?v=2">
+  <link rel="stylesheet" href="css/account-pages.css?v=1">
+  <link rel="stylesheet" href="css/app-features.css?v=1">
+  <link rel="stylesheet" href="css/app-features-extra.css?v=1">
+  <link rel="stylesheet" href="css/app-features-media.css?v=1">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/backgrounds.css">
+  <link rel="stylesheet" href="css/settings.css">
+  <link rel="stylesheet" href="css/analytics.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/header-actions.css?v=4">
+  <link rel="stylesheet" href="css/material.css">
+  <link rel="stylesheet" href="css/design.css?v=4">
+  <link rel="stylesheet" href="css/pwa.css?v=1">
+  <link rel="stylesheet" href="css/polish.css?v=3">
+  <link rel="stylesheet" href="css/login-layout.css?v=1">
+  <link rel="stylesheet" href="css/header-layout.css?v=3">
+  <link rel="stylesheet" href="css/layout-fit.css?v=2">
+  <link rel="stylesheet" href="css/carecam-md3-dark.css?v=3">
+  <link rel="stylesheet" href="css/carecam-dark-fixes.css?v=8">
+  <link rel="stylesheet" href="css/responsive-fluid.css?v=7">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img src="assets/images/logo-icon.svg" alt="">
+        <b>CareCam AI</b>
+        <button id="close" type="button" aria-label="Đóng menu">×</button>
+      </div>
+      <small>GIÁM SÁT</small>
+      <nav id="nav" aria-label="Điều hướng chính">
+        <a class="active" data-page="dashboard"><span aria-hidden="true">▦</span><span>Tổng quan</span></a>
+        <a data-page="devices"><span aria-hidden="true">◉</span><span>Camera & thiết bị</span></a>
+        <a data-page="ai-config"><span aria-hidden="true">⌘</span><span>Cấu hình AI & vùng</span></a>
+        <a data-page="statistics"><span aria-hidden="true">◒</span><span>Thống kê</span></a>
+        <a data-page="security"><span aria-hidden="true">◇</span><span>Bảo mật</span></a>
+        <a data-page="account"><span aria-hidden="true">♙</span><span>Quản lý tài khoản</span></a>
+      </nav>
+      <small>HỆ THỐNG</small>
+      <nav aria-label="Cài đặt và thông báo">
+        <a data-page="messages"><span aria-hidden="true">♧</span><span>Thông báo</span></a>
+        <a data-page="profile"><span aria-hidden="true">◎</span><span>Tài khoản</span></a>
+        <a data-page="settings"><span aria-hidden="true">⚙</span><span>Cài đặt</span></a>
+        <a data-page="contacts"><span aria-hidden="true">♧</span><span>Liên hệ khẩn cấp</span></a>
+      </nav>
+      <section class="system-health-widget" aria-label="Sức khỏe hệ thống">
+        <div class="health-widget-title"><span class="material-symbols-rounded">memory</span><b>AI SERVER</b><i></i></div>
+        <div class="health-widget-row"><span>AI server · CPU</span><b id="cpu-health-label">—%</b></div>
+        <div class="health-meter"><i id="cpu-health-meter"></i></div>
+        <div class="health-widget-row"><span>GPU memory</span><b id="gpu-health-label">CPU mode</b></div>
+        <div class="health-meter gpu-meter"><i id="gpu-health-meter"></i></div>
+        <div class="health-widget-row"><span>Camera latency</span><b id="rtsp-health-label">— ms</b></div>
+      </section>
+      <div class="user">
+        <img src="assets/images/avatar/avatar-1.jpg" alt="Ảnh đại diện">
+        <div><b>Admin</b><small>Quản trị viên</small></div>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <button id="menu" type="button" aria-label="Mở menu">☰</button>
+        <div class="header-identity"><b>CareCam AI <span>•</span> Fall Detection System</b><small><i></i> <span id="system-online-label">System online</span></small></div>
+        <b id="breadcrumb">Tổng quan</b>
+        <span class="grow"></span>
+        <div class="header-tools">
+          <button class="global-sound-toggle" type="button" aria-label="Tắt âm thanh cảnh báo" title="Âm thanh cảnh báo"><span class="material-symbols-rounded">volume_up</span><span class="sound-label">Âm thanh bật</span></button>
+          <button class="header-panic" type="button"><span class="material-symbols-rounded">crisis_alert</span><span>Báo động</span></button>
+          <button class="header-bell" type="button" aria-label="Xem cảnh báo té ngã" title="Cảnh báo té ngã"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="notification-count" hidden>0</span><i class="notification-indicator" hidden></i></button>
+          <button class="header-account" type="button" aria-label="Mở tài khoản">
+            <span class="header-user-meta"><span class="header-user-name">Admin</span><small class="header-user-role">Quản trị viên</small></span>
+            <img class="header-avatar" src="assets/images/avatar/avatar-1.jpg" alt="Tài khoản">
+          </button>
+        </div>
+      </header>
+      <section id="content"></section>
+    </main>
+  </div>
+  <script src="js/time-format.js?v=1"></script>
+  <script src="js/navigation.js?v=8"></script>
+  <script src="js/camera.js?v=13"></script>
+  <script src="js/camera-modal.js?v=3"></script>
+  <script src="js/webcam.js?v=10"></script>
+  <script src="js/notifications.js?v=12"></script>
+  <script src="js/video-preview.js?v=7"></script>
+  <script src="js/auth.js?v=13"></script>
+  <script src="js/account.js?v=8"></script>
+  <script src="js/settings.js?v=4"></script>
+  <script src="js/analytics-pages.js?v=5"></script>
+  <script src="js/app-features.js?v=5"></script>
+  <script src="js/dashboard.js?v=10"></script>
+  <script src="js/header-actions.js?v=9"></script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js'));
+    }
+  </script>
+</body>
+</html>

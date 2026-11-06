@@ -1,0 +1,140 @@
+/* Login view: full-screen supplied photo with a calm, high-contrast form card. */
+body:has(.cl-login01) {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #172a26;
+}
+
+body:has(.cl-login01)::before {
+  position: fixed;
+  z-index: -2;
+  inset: -12px;
+  background: url("../assets/images/mau-background-dep-5.jpg") center / cover no-repeat;
+  content: "";
+  filter: blur(3px) saturate(.88);
+  transform: scale(1.025);
+}
+
+body:has(.cl-login01)::after {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(120deg, rgb(13 31 27 / 42%), rgb(11 25 23 / 20%) 52%, rgb(13 31 27 / 46%));
+  content: "";
+}
+
+body:has(.cl-login01) > .cl-login01 {
+  display: grid;
+  width: 100%;
+  min-height: 100svh;
+  grid-template-columns: minmax(0, 470px);
+  justify-content: center;
+  align-items: center;
+  padding: clamp(20px, 5vw, 64px);
+  background: transparent;
+}
+
+.cl-login01__pane {
+  width: 100%;
+  min-height: 0;
+  padding: clamp(28px, 5vw, 48px);
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 95%);
+  box-shadow: 0 28px 90px rgb(3 14 12 / 32%), 0 3px 12px rgb(3 14 12 / 8%);
+  backdrop-filter: blur(18px);
+}
+
+.cl-login01__brand {
+  margin: 0 0 34px;
+  color: #225f50;
+  font-size: 18px;
+  letter-spacing: .1em;
+}
+
+.cl-login01__body {
+  display: block;
+  flex: initial;
+  padding: 0;
+}
+
+.cl-login01__title {
+  margin: 8px 0 10px;
+  color: #142b27;
+  font-size: clamp(27px, 5vw, 34px);
+  line-height: 1.18;
+}
+
+.cl-login01__sub {
+  margin: 0 0 24px;
+  color: #687974;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.cl-login01__form { max-width: none; }
+.cl-login01__field { margin: 0 0 17px; }
+.cl-login01__label { margin-bottom: 7px; color: #344a44; font-size: 13px; font-weight: 700; }
+.cl-login01__input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #dce6e1;
+  border-radius: 11px;
+  background: #fbfdfc;
+  color: #172b26;
+  font-size: 14px;
+}
+.password-field .cl-login01__input { padding-right: 68px; }
+.password-toggle {
+  min-height: 34px;
+  padding: 0 8px;
+  border-radius: 7px;
+  color: #397462;
+  font-size: 12px;
+}
+.password-toggle:hover { background: #edf5f1; }
+.cl-login01__live:not(:empty) {
+  margin: 12px 0;
+  padding: 11px 13px;
+  border: 1px solid #f1d7cf;
+  border-radius: 10px;
+  background: #fff8f5;
+  color: #9a4934;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.cl-login01__submit {
+  min-height: 49px;
+  margin-top: 5px;
+  border-radius: 11px;
+  background: #286b5b;
+  box-shadow: 0 8px 18px rgb(40 107 91 / 18%);
+  font-size: 14px;
+}
+.cl-login01__submit:hover { background: #1d5448; }
+.cl-login01__foot {
+  margin: 21px 0 0;
+  color: #677872;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.cl-login01__link { color: #236b58; font-size: inherit; }
+.auth-security-note { margin: 22px 0 0; color: #83918b; font-size: 11px; }
+.cl-login01__art { display: none; }
+
+@media (max-width: 520px) {
+  body:has(.cl-login01) > .cl-login01 { padding: 16px; }
+  .cl-login01__pane { padding: 27px 22px; border-radius: 20px; }
+  .cl-login01__brand { margin-bottom: 28px; }
+}
+
+@media (max-height: 640px) and (min-width: 521px) {
+  body:has(.cl-login01) > .cl-login01 { align-items: start; padding-top: 22px; padding-bottom: 22px; }
+  .cl-login01__pane { padding-top: 24px; padding-bottom: 24px; }
+  .cl-login01__brand { margin-bottom: 20px; }
+  .cl-login01__field { margin-bottom: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(.cl-login01)::before { filter: saturate(.88); }
+}

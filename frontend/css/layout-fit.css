@@ -1,0 +1,56 @@
+/* Keep the app inside the viewport at normal browser zoom and use its space well. */
+html, body { width: 100%; max-width: 100%; overflow-x: clip; }
+.app, main, #content, .content { min-width: 0; max-width: 100%; }
+main { width: auto; }
+main > header { min-width: 0; }
+.content { width: min(100%, 1520px); padding: clamp(20px, 2.1vw, 36px); }
+.dashboard-welcome { margin-bottom: 18px; }
+.dashboard-stats { gap: 12px; margin-bottom: 16px; }
+.dash-stat { min-height: 108px; padding: 15px; gap: 11px; }
+.dash-stat b { margin: 7px 0 4px; font-size: 23px; }
+.dashboard-main { grid-template-columns: minmax(0, 1.35fr) minmax(340px, .9fr); gap: 16px; align-items: stretch; }
+.dashboard-camera-panel, .recent-panel { padding: 21px; }
+.live-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin-top: 16px; }
+.live-preview { height: clamp(150px, 17vw, 205px); }
+.event-list { margin-top: 10px; }
+.event { padding: 11px 0; }
+.event b { overflow-wrap: anywhere; }
+.events-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.events-pagination-label { color: var(--muted); font-size: 11px; }
+.events-pagination-actions { display: flex; align-items: center; gap: 8px; }
+.events-pagination button { min-width: 36px; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink-soft); font-size: 11px; font-weight: 650; }
+.events-pagination button:hover:not(:disabled) { border-color: #bad5cc; background: #f2f8f5; color: var(--brand); }
+.events-pagination button:disabled { opacity: .4; cursor: not-allowed; }
+.events-pagination .page-current { min-width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: var(--brand-soft); color: var(--brand-dark); font-size: 11px; font-weight: 750; }
+body .app main > header > .header-tools { margin-right: 60px !important; }
+.notification-popup { width: 360px; max-width: calc(100vw - 24px); }
+.notification-popup .popup-title { display: grid; gap: 9px; padding: 8px 8px 11px; }
+.notification-popup .popup-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.notification-popup .popup-actions a { color: var(--brand); font-size: 11px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.notification-popup .mark-all-read { width: auto; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: #63758a; font-size: 10px; font-weight: 600; white-space: nowrap; }
+.notification-popup .mark-all-read:hover:not(:disabled) { border-color: #b8d7cd; background: #f3f9f6; color: var(--brand); }
+.notification-popup .mark-all-read:disabled { opacity: .65; }
+.notification-popup .popup-event { align-items: center; }
+.notification-popup .popup-event > div { min-width: 0; flex: 1; }
+.notification-popup .popup-event em { color: #a2adba; font-size: 9px; font-style: normal; white-space: nowrap; }
+.notification-popup .popup-event.is-unread > div b { color: #293c51; }
+.notification-popup .popup-event.is-read { opacity: .68; }
+@media (max-width: 1100px) {
+  .dashboard-main { grid-template-columns: minmax(0, 1.15fr) minmax(300px, .9fr); }
+  .dash-stat { min-height: 102px; }
+}
+@media (max-width: 900px) {
+  .dashboard-main { grid-template-columns: 1fr; }
+  .live-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+}
+@media (max-width: 800px) {
+  body .app main > header > .header-tools { margin-right: 10px !important; }
+}
+@media (max-width: 580px) {
+  .content { padding: 18px 14px; }
+  .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-main { gap: 12px; }
+  .dashboard-camera-panel, .recent-panel { padding: 16px; }
+  .events-pagination { align-items: flex-start; flex-direction: column; }
+  .events-pagination-actions { align-self: flex-end; }
+}
