@@ -8,10 +8,10 @@ document.addEventListener("click", event => {
       <button class="modal-close" type="button" aria-label="Đóng">×</button>
       <span class="section-kicker">THIẾT LẬP THIẾT BỊ</span>
       <h2 id="camera-modal-title">Thêm camera</h2>
-      <p class="muted">Khai báo nguồn hình ảnh để bắt đầu giám sát.</p>
+      <p class="muted">Hiện chỉ hỗ trợ webcam được trình duyệt cấp quyền. IP/RTSP chưa thể xem hoặc phân tích trực tiếp.</p>
       <label>Tên camera<input id="cm-name" placeholder="Ví dụ: Camera phòng khách" maxlength="80"></label>
       <label>Vị trí<input id="cm-location" placeholder="Ví dụ: Phòng khách"></label>
-      <label>Nguồn camera<input id="cm-source" value="0" placeholder="0 hoặc địa chỉ camera"></label>
+      <label>Nguồn camera<select id="cm-source"><option value="0">Webcam của thiết bị đang mở trang</option></select></label>
       <div class="modal-actions"><button class="modal-cancel" type="button">Hủy</button><button class="button" id="cm-save" type="button">Thêm camera</button></div>
     </div>`;
   document.body.append(modal);

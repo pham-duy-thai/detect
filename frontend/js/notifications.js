@@ -2,6 +2,8 @@
   const API_ROOT = (window.FALLGUARD_API_BASE || (location.protocol === "https:" ? location.origin : `${location.protocol}//${location.hostname}:8000`)).replace(/\/$/, "");
   const API = `${API_ROOT}/api`;
   let socket;
+  let reconnectTimer;
+  const seenEventIds = new Set();
   const eventPageSize = 8;
   let historyEvents = [];
 
@@ -26,7 +28,7 @@
     let notice;
     try {
       notice = new Notification("Cảnh báo té ngã - FallGuard", {
-        body: `${event.message || "Phát hiện người té ngã"} · Độ tin cậy ${((event.confidence || 0) * 100).toFixed(1)}%`,
+        body: `${event.message || "Phát hiện người té ngã"} · ${FallGuardScore.label(event)}`,
         tag: `fall-${event.id || `${event.camera_id || "camera"}-${Date.now()}`}`,
         requireInteraction: true,
       });
@@ -54,15 +56,26 @@
 
   function toast(event) {
     window.dispatchEvent(new CustomEvent("fallguard:alert", { detail: event }));
+    document.querySelectorAll(".event-toast").forEach(toast => toast.remove());
     const node = document.createElement("div");
-    node.className = "event-toast";
+    node.className = "event-toast notice-toast";
+    node.setAttribute("role", "alert");
     const title = document.createElement("b");
     title.textContent = "⚠ Cảnh báo té ngã";
     const message = document.createElement("span");
     message.textContent = event.message || "Phát hiện người té ngã";
     const confidence = document.createElement("small");
-    confidence.textContent = `Độ tin cậy ${((event.confidence || 0) * 100).toFixed(1)}%`;
+    confidence.textContent = FallGuardScore.label(event);
     node.append(title, message, confidence);
+    const close = document.createElement("button");
+    close.type = "button"; close.className = "notice-toast-close";
+    close.setAttribute("aria-label", "Đóng thông báo");
+    close.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">close</span>';
+    close.onclick = () => node.remove();
+    const open = document.createElement("button");
+    open.type = "button"; open.className = "notice-toast-action"; open.textContent = "Xem sự cố →";
+    open.onclick = () => { window.FallGuardNotifications?.openEvent(event.id); node.remove(); };
+    node.append(close, open);
     document.body.appendChild(node);
     setTimeout(() => node.classList.add("show"), 20);
     setTimeout(() => {
@@ -106,46 +119,45 @@
 
   function eventRow(event) {
     const message = String(event.message || "Phát hiện người té ngã").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-    return `<div class="event ${isAcknowledged(event) ? "is-read" : "is-unread"}"><span class="event-dot danger">!</span><div><b>${message}</b><small>${FallGuardTime.formatDateTime(event.created_at)} · Camera ${event.camera_id} · Độ tin cậy ${((event.confidence || 0) * 100).toFixed(1)}%</small></div><em class="read-status">${isAcknowledged(event) ? "Đã đọc" : "Chưa đọc"}</em></div>`;
+    return `<div class="event ${isAcknowledged(event) ? "is-read" : "is-unread"}"><span class="event-dot danger">!</span><div><b>${message}</b><small>${FallGuardTime.formatDateTime(event.created_at)} · Camera ${event.camera_id} · ${FallGuardScore.label(event)}</small></div><em class="read-status">${isAcknowledged(event) ? "Đã đọc" : "Chưa đọc"}</em></div>`;
   }
 
   function isFallEvent(event) {
     return event.id != null || /t[eé] ng[aã]|fall/i.test(event.message || "") || event.event_type === "FALL" || event.result === "FALL";
   }
 
-  // Permission prompts must follow a user action; requesting on page load is
-  // ignored or blocked by current browsers.
-  document.addEventListener("click", event => {
-    if (event.target.closest(".camera-card [data-toggle], #analyze")) {
-      enableDesktopNotifications();
-    }
-    if (event.target.closest('[data-page="messages"]')) setTimeout(() => window.showIncidents?.(), 0);
-  });
-
-  window.addEventListener("fallguard:notifications-read", () => {
-    historyEvents = historyEvents.map(event => ({ ...event, acknowledged: true }));
+  window.addEventListener("fallguard:notifications-read", event => {
+    historyEvents = historyEvents.map(item => !event.detail?.event_id || Number(item.id) === Number(event.detail.event_id)
+      ? { ...item, acknowledged: true } : item);
   });
 
   function connect() {
-    const socketHost = location.protocol === "https:" ? location.host : `${location.hostname}:8000`;
-    socket = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${socketHost}/ws/events?token=${encodeURIComponent(window.authToken?.() || "")}`);
+    const token = window.authToken?.();
+    if (!token || socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(socket.readyState)) return;
+    clearTimeout(reconnectTimer);
+    const url = new URL(API_ROOT);
+    socket = new WebSocket(`${url.protocol === "https:" ? "wss:" : "ws:"}//${url.host}/ws/events?token=${encodeURIComponent(token)}`);
     socket.onmessage = event => {
       try {
         const item = JSON.parse(event.data);
         if (item.event_type === "heartbeat" || item.type === "heartbeat" || item.state === "HEARTBEAT") return;
         if (!isFallEvent(item)) return;
-        toast(item);
-        window.showEmergencyDialog?.(item);
+        if (!seenEventIds.has(item.id)) {
+          seenEventIds.add(item.id);
+          if (seenEventIds.size > 500) seenEventIds.delete(seenEventIds.values().next().value);
+          toast(item);
+        }
         if (document.querySelector('[data-page="messages"].active')) window.showIncidents?.();
       } catch (error) {
         console.error("Invalid event notification", error);
       }
     };
-    socket.onclose = () => setTimeout(connect, 3000);
+    socket.onclose = () => { if (window.authToken?.()) reconnectTimer = setTimeout(connect, 3000); };
     socket.onerror = () => socket.close();
   }
 
   window.enableFallDesktopNotifications = enableDesktopNotifications;
-  window.showEvents = showEvents;
+  window.showEvents = () => window.FallGuardNotifications.show();
+  window.addEventListener("fallguard:authenticated", connect);
   connect();
 })();

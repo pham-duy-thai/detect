@@ -53,7 +53,7 @@ async function renderDashboard() {
           <section class="panel recent-panel">
             <div class="section-title"><div><span class="section-kicker">CẬP NHẬT MỚI</span><h2>Cảnh báo gần đây</h2><p class="muted">Các sự kiện được hệ thống ghi nhận.</p></div><a class="text-button" data-page="messages">Tất cả <span>→</span></a></div>
             <div class="event-list">${events.slice(0, 5).map(event => `
-              <div class="event"><span class="event-dot danger">!</span><div><b>${escape(event.message || "Sự kiện hệ thống")}</b><small>${FallGuardTime.formatDateTime(event.created_at)} <span>·</span> ${(Number(event.confidence || 0) * 100).toFixed(0)}% tin cậy</small></div></div>`).join("") || `<div class="empty-events"><span>✓</span><p>Chưa có cảnh báo nào.</p><small>Các sự kiện mới sẽ xuất hiện tại đây.</small></div>`}</div>
+              <div class="event"><span class="event-dot danger">!</span><div><b>${escape(event.message || "Sự kiện hệ thống")}</b><small>${FallGuardTime.formatDateTime(event.created_at)} <span>·</span> ${FallGuardScore.label(event)}</small></div></div>`).join("") || `<div class="empty-events"><span>✓</span><p>Chưa có cảnh báo nào.</p><small>Các sự kiện mới sẽ xuất hiện tại đây.</small></div>`}</div>
           </section>
         </div>
       </div>`;

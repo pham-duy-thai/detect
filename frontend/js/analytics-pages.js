@@ -38,7 +38,8 @@ function renderStats(allEvents, cameras) {
     const isManual = event => (event.source || (event.camera_id === "manual" ? "manual" : event.camera_id === "uploaded_video" ? "uploaded_video" : "live_camera")) === "manual";
     const aiEvents = events.filter(event => !isManual(event));
     const falseAlarms = aiEvents.filter(event => event.status === "false_alarm").length;
-    const average = aiEvents.length ? aiEvents.reduce((sum, event) => sum + Number(event.confidence || 0), 0) / aiEvents.length : 0;
+    const lstmEvents = aiEvents.filter(event => event.confidence_kind === "lstm_score" && Number.isFinite(Number(event.confidence)));
+    const average = lstmEvents.length ? lstmEvents.reduce((sum, event) => sum + Number(event.confidence), 0) / lstmEvents.length : null;
     const days = new Set(aiEvents.map(event => FallGuardTime.formatDateTime(event.created_at,{year:"numeric",month:"2-digit",day:"2-digit"}))).size;
     const byCamera = cameras.map(camera => ({name:camera.name,count:aiEvents.filter(event=>event.camera_id===camera.id).length}));
     const other = [
@@ -50,7 +51,7 @@ function renderStats(allEvents, cameras) {
       <form class="panel event-filter-bar" id="stats-filter"><label>Từ ngày<input type="date" name="from" value="${analyticsEscape(from)}"></label><label>Đến ngày<input type="date" name="to" value="${analyticsEscape(to)}"></label><button class="button" type="submit">Lọc</button><button class="outline-button" type="button" id="stats-clear">Xóa lọc</button></form>
       <div class="stats-grid">
         <article class="stat-card"><div class="stat-icon">!</div><p>Sự kiện AI</p><strong>${aiEvents.length}</strong><small>${aiEvents.length-falseAlarms} chưa đánh dấu báo giả · ${falseAlarms} báo giả</small></article>
-        <article class="stat-card"><div class="stat-icon">%</div><p>Điểm LSTM trung bình</p><strong>${(average * 100).toFixed(1)}%</strong><small>Không phải độ chính xác đã kiểm chứng</small></article>
+        <article class="stat-card"><div class="stat-icon">%</div><p>Điểm LSTM trung bình</p><strong>${average === null ? "—" : `${(average * 100).toFixed(1)}%`}</strong><small>${lstmEvents.length} sự kiện có điểm LSTM · không phải độ chính xác đã kiểm chứng</small></article>
         <article class="stat-card"><div class="stat-icon">◉</div><p>Camera đang bật</p><strong>${cameras.filter(camera => camera.enabled).length}/${cameras.length}</strong><small>Trạng thái cấu hình hiện tại</small></article>
         <article class="stat-card"><div class="stat-icon">✓</div><p>Ngày có sự kiện AI</p><strong>${days}</strong><small>Trong khoảng ngày đã chọn</small></article>
       </div>

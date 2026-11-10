@@ -1,5 +1,6 @@
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+from typing import Literal
 from collections import deque
 import asyncio
 import ctypes
@@ -30,6 +31,9 @@ import torch
 from ultralytics import YOLO
 from lstm_model import LSTMClassifier
 from fall_postprocess import FallPostProcessor
+from fall_fusion import decide_fall, summarize_clip
+from contact_identity import normalize_contact
+from ablation import summarize_variants
 from primary_person import infer_primary_person_pose, select_primary_person
 try:
     from pywebpush import webpush, WebPushException
@@ -38,7 +42,7 @@ except ImportError:
     WebPushException = Exception
 
 
-DATA_DIR = ROOT / "data"
+DATA_DIR = Path(os.environ.get("FALLGUARD_DATA_DIR", str(ROOT / "data"))).resolve()
 EVENTS_FILE = DATA_DIR / "events.json"
 PUSH_FILE = DATA_DIR / "push_subscriptions.json"
 CAMERAS_FILE = DATA_DIR / "cameras.json"
@@ -47,7 +51,7 @@ AUDIT_FILE = DATA_DIR / "audit_logs.json"
 INCIDENT_MEDIA_DIR = DATA_DIR / "incident_media"
 USERS_FILE = DATA_DIR / "users.json"
 SESSIONS_FILE = DATA_DIR / "sessions.json"
-DATA_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 INCIDENT_MEDIA_DIR.mkdir(exist_ok=True)
 AVATAR_DIR = DATA_DIR / "avatars"
 AVATAR_DIR.mkdir(exist_ok=True)
@@ -67,6 +71,7 @@ class FallEvent(BaseModel):
     person_id: str = "unknown"
     camera_id: str = "camera_01"
     confidence: float = Field(ge=0, le=1)
+    confidence_kind: Literal["lstm_score", "pose_keypoint_quality"] | None = None
     message: str = "Ph\u00e1t hi\u1ec7n ng\u01b0\u1eddi t\u00e9 ng\u00e3"
 
 
@@ -145,7 +150,7 @@ POSE_CANDIDATE_CONFIDENCE = 0.05
 
 
 class AuthRegister(BaseModel):
-    email: str = Field(min_length=5, max_length=254)
+    email: str = Field(min_length=5, max_length=254)  # Email or Vietnamese phone number.
     name: str = Field(min_length=1, max_length=80)
     password: str = Field(min_length=10, max_length=128)
 
@@ -189,10 +194,10 @@ def write_json_list(path: Path, items: list[dict]) -> None:
     path.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
 
 def normalize_email(email: str) -> str:
-    value = email.strip().lower()
-    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
-        raise HTTPException(422, "Invalid email address")
-    return value
+    try:
+        return normalize_contact(email)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
 
 def ensure_admin_account() -> None:
     if read_json_list(USERS_FILE):
@@ -230,7 +235,7 @@ def password_hash(password: str, salt: str | None = None) -> dict:
 
 def public_user(user: dict) -> dict:
     is_admin_account = user.get("email", "").lower() == "admin@gmail.com"
-    return {"id": user["id"], "email": user["email"], "name": user["name"],
+    return {"id": user["id"], "email": user["email"], "contact_type": "phone" if user["email"].startswith("+84") else "email", "name": user["name"],
             "created_at": user["created_at"], "role": "admin" if is_admin_account else user.get("role", "guest"),
             "status": "approved" if is_admin_account else user.get("status", "approved"),
             "avatar_url": user.get("avatar_url")}
@@ -261,6 +266,8 @@ def get_session_user(authorization: str | None) -> dict:
     user = next((u for u in read_json_list(USERS_FILE) if u["id"] == matched["user_id"]), None)
     if not user:
         raise HTTPException(401, "Account not found")
+    if user.get("status", "approved") != "approved":
+        raise HTTPException(403, "Tài khoản chưa được quản trị viên duyệt.")
     return user
 
 def require_admin_user(authorization: str | None) -> dict:
@@ -311,7 +318,7 @@ def register_user(payload: AuthRegister) -> dict:
         raise HTTPException(409, "Email này đã được dùng cho tài khoản quản trị.")
     if len(payload.password) < 10 or not re.search(r"[A-Za-z]", payload.password) or not re.search(r"[0-9]", payload.password):
         raise HTTPException(422, "Password must be at least 10 characters and include letters and numbers")
-    if any(user.get("email") == email for user in users):
+    if any(normalize_email(user.get("email", "")) == email for user in users):
         raise HTTPException(409, "Email này đã được đăng ký.")
     user = {"id": secrets.token_hex(16), "email": email, "name": payload.name.strip(), "role": "guest", "status": "pending",
             **password_hash(payload.password), "created_at": datetime.now(timezone.utc).isoformat()}
@@ -353,7 +360,7 @@ def create_auth_user(payload: AuthUserCreate, authorization: str | None = Header
     if len(payload.password) < 10 or not re.search(r"[A-Za-z]", payload.password) or not re.search(r"[0-9]", payload.password):
         raise HTTPException(422, "Password must be at least 10 characters and include letters and numbers")
     users = read_json_list(USERS_FILE)
-    if any(user.get("email") == email for user in users):
+    if any(normalize_email(user.get("email", "")) == email for user in users):
         raise HTTPException(409, "An account with this email already exists")
     user = {"id": secrets.token_hex(16), "email": email, "name": payload.name.strip(), "role": payload.role, "status": "approved",
             **password_hash(payload.password), "created_at": datetime.now(timezone.utc).isoformat()}
@@ -375,7 +382,7 @@ def update_auth_user(user_id: str, payload: AuthUserUpdate,
     changes = payload.model_dump(exclude_unset=True)
     if "email" in changes:
         changes["email"] = normalize_email(changes["email"])
-        if any(item.get("email", "").lower() == changes["email"] and item.get("id") != user_id for item in users):
+        if any(normalize_email(item.get("email", "")) == changes["email"] and item.get("id") != user_id for item in users):
             raise HTTPException(409, "Email này đã được sử dụng.")
     password = changes.pop("password", None)
     if password is not None:
@@ -528,7 +535,7 @@ class EventUpdate(BaseModel):
 
 def read_app_settings() -> dict:
     if not APP_SETTINGS_FILE.exists():
-        return {"ai": {"fall_hold_seconds": 3, "sensitivity": 0.55, "schedule_enabled": False,
+        return {"ai": {"geometry_confirm_seconds": 0.2, "lstm_confidence_threshold": 0.65, "sensitivity": 0.55, "schedule_enabled": False,
                         "schedule_start": "00:00", "schedule_end": "23:59", "show_skeleton": True,
                         "show_boxes": True, "ignore_zones": [], "priority_camera": None}, "contacts": [],
                 "channels": {"push": True, "sms": False, "call": False, "zalo": False}}
@@ -540,22 +547,19 @@ def read_app_settings() -> dict:
 def write_app_settings(settings: dict) -> None:
     APP_SETTINGS_FILE.write_text(json.dumps(settings, ensure_ascii=False, indent=2), encoding="utf-8")
 
-def configured_postprocessor() -> FallPostProcessor:
-    settings = read_app_settings().get("ai", {})
-    hold = min(30.0, max(1.0, float(settings.get("fall_hold_seconds", 3))))
-    sensitivity = min(0.95, max(0.2, float(settings.get("sensitivity", 0.55))))
-    # Higher verification sensitivity requests a longer stable observation
-    # before alerting, while lowering the descent-speed threshold.
-    hold = min(30.0, hold + sensitivity * 2.0)
-    return FallPostProcessor(lying_duration_s=hold, velocity_threshold=max(0.35, 1.35 - sensitivity))
+def configured_postprocessor(settings: dict | None = None) -> FallPostProcessor:
+    settings = settings if settings is not None else read_app_settings().get("ai", {})
+    hold, speed, _, _ = detection_profile(settings)
+    return FallPostProcessor(lying_duration_s=hold, velocity_threshold=speed)
 
 def detection_profile(settings: dict) -> tuple[float, float, int, float]:
-    base_hold = min(30.0, max(1.0, float(settings.get("fall_hold_seconds", 3))))
+    # The old multi-second fall_hold_seconds setting does not gate the new
+    # strong-transition route. Its replacement is explicit and time based.
+    effective_hold = min(1.5, max(0.15, float(settings.get("geometry_confirm_seconds", 0.2))))
     sensitivity = min(0.95, max(0.2, float(settings.get("sensitivity", 0.55))))
-    effective_hold = min(30.0, base_hold + sensitivity * 2.0)
-    speed_threshold = max(0.35, 1.35 - sensitivity)
-    model_votes = min(5, 3 + round(sensitivity * 2))
-    model_span_s = 0.5 + sensitivity
+    speed_threshold = max(0.35, 1.15 - sensitivity)
+    model_votes = 2
+    model_span_s = 0.15
     return effective_hold, speed_threshold, model_votes, model_span_s
 
 def point_in_polygon(point: tuple[float, float], polygon: list[list[float]]) -> bool:
@@ -673,6 +677,8 @@ def list_audit_logs(authorization: str | None = Header(default=None)) -> list[di
 @app.post("/api/cameras", status_code=201)
 def create_camera(camera: Camera, authorization: str | None = Header(default=None)) -> dict:
     require_admin_user(authorization)
+    if camera.source != "0":
+        raise HTTPException(422, "Hiện chỉ hỗ trợ webcam trình duyệt (source=0); IP/RTSP chưa hoạt động.")
     cameras = read_cameras()
     next_id = 1
     used = {item.get("id") for item in cameras}
@@ -688,6 +694,8 @@ def create_camera(camera: Camera, authorization: str | None = Header(default=Non
 def update_camera(camera_id: str, update: CameraUpdate,
                   authorization: str | None = Header(default=None)) -> dict:
     require_admin_user(authorization)
+    if update.source is not None and update.source != "0":
+        raise HTTPException(422, "Hiện chỉ hỗ trợ webcam trình duyệt (source=0); IP/RTSP chưa hoạt động.")
     cameras = read_cameras()
     for camera in cameras:
         if camera["id"] == camera_id:
@@ -781,11 +789,21 @@ class FallDecisionStream:
     def __init__(self, settings: dict):
         self.sequence: deque[list[float]] = deque(maxlen=40)
         self.model_votes: deque[tuple[float, int, float]] = deque(maxlen=9)
-        self.postprocessor = configured_postprocessor()
+        self.postprocessor = configured_postprocessor(settings)
         self.latest_probability: float | None = None
         self.latest_prediction: int | None = None
         self.latest_model_confidence: float | None = None
         self.last_valid_timestamp: float | None = None
+        self.last_model_timestamp: float | None = None
+        self.bend_support: tuple[float, float, float] | None = None
+        self.floor_reference: tuple[float, float, float] | None = None
+        self.standing_head_hip: tuple[float, float] | None = None
+        self.floor_candidate_since: float | None = None
+        self.compact_landing: tuple[float, int] | None = None
+        self.on_floor_since: float | None = None
+        self.lying_reference: tuple[float, float, float] | None = None
+        self.lying_drop_since: float | None = None
+        self.lying_drop_confirmed = False
         self.settings = settings
 
     def reset(self, timestamp_s: float) -> None:
@@ -795,24 +813,41 @@ class FallDecisionStream:
         self.latest_prediction = None
         self.latest_model_confidence = None
         self.last_valid_timestamp = None
+        self.last_model_timestamp = None
+        self.bend_support = None
+        self.floor_reference = None
+        self.standing_head_hip = None
+        self.floor_candidate_since = None
+        self.compact_landing = None
+        self.on_floor_since = None
+        self.lying_reference = None
+        self.lying_drop_since = None
+        self.lying_drop_confirmed = False
         self.postprocessor.update(None, timestamp_s)
 
     def update(self, keypoints, confidence, timestamp_s: float) -> dict:
-        if self.last_valid_timestamp is not None and timestamp_s - self.last_valid_timestamp > 2.0:
-            self.sequence.clear()
-            self.model_votes.clear()
-            self.latest_probability = None
-            self.latest_prediction = None
-            self.latest_model_confidence = None
+        if self.last_valid_timestamp is not None and not 0 < timestamp_s - self.last_valid_timestamp <= 2.0:
+            self.reset(timestamp_s)
         self.last_valid_timestamp = timestamp_s
         hold, speed_threshold, required_votes, required_span = detection_profile(self.settings)
         self.postprocessor.lying_duration_s = hold
         self.postprocessor.velocity_threshold = speed_threshold
 
         # Stage 1: convert this valid pose into the same three features used at train time.
-        feature = extract_features(keypoints)
-        self.sequence.append(feature)
-        model_ready = len(self.sequence) == self.sequence.maxlen
+        points = np.asarray(keypoints, dtype=float)
+        scores = np.asarray(confidence, dtype=float).reshape(-1)
+        model_indices = [0, 5, 6, 11, 12]
+        model_pose_valid = bool(len(scores) >= 17 and points.shape[0] >= 17 and
+                            np.all(scores[model_indices] >= 0.25) and
+                            np.isfinite(points[model_indices, :2]).all() and
+                            np.all(np.any(np.abs(points[model_indices, :2]) > 1e-6, axis=1)))
+        if self.last_model_timestamp is not None and timestamp_s - self.last_model_timestamp > 1.0:
+            self.sequence.clear()
+            self.model_votes.clear()
+        if model_pose_valid:
+            self.sequence.append(extract_features(points))
+            self.last_model_timestamp = timestamp_s
+        model_ready = bool(model_pose_valid and len(self.sequence) == self.sequence.maxlen)
         probability = None
         prediction = None
         model_confidence = None
@@ -837,76 +872,256 @@ class FallDecisionStream:
         metrics = self.postprocessor.last_metrics
         geometry_fall = geometry_state == "FALL"
         model_predicts_fall = prediction == 1 if prediction is not None else None
-        agrees = model_consensus and model_predicts_fall is not None and model_predicts_fall == geometry_fall
-        confidence_threshold = float(self.settings.get("lstm_confidence_threshold", 0.65))
+        confidence_threshold = min(0.99, max(0.5, float(self.settings.get("lstm_confidence_threshold", 0.65))))
         model_confident = model_confidence is not None and model_confidence >= confidence_threshold
-        if not model_ready:
-            final_state = "VERIFYING_FALL" if geometry_fall else geometry_state
-            if final_state == "NORMAL":
-                final_state = "WARMING_UP"
-            verdict = "PENDING"
-        elif not model_consensus:
-            final_state = "VERIFYING_FALL" if geometry_fall else "VERIFYING_MODEL"
-            verdict = "PENDING"
-        elif not agrees:
-            final_state = "UNCERTAIN"
-            verdict = "UNCERTAIN"
-        elif model_predicts_fall:
-            final_state = "FALL"
-            verdict = "FALL"
-        else:
-            final_state = geometry_state
-            verdict = "NO_FALL"
-
+        agrees = bool(model_ready and model_confident and model_predicts_fall == geometry_fall)
         ratio = metrics.box_ratio if metrics else 0.0
-        horizontal = ratio >= self.postprocessor.aspect_ratio_threshold
+        horizontal = self.postprocessor.last_horizontal_pose
+        fusion = decide_fall(
+            geometry_state=geometry_state, horizontal=horizontal,
+            rapid_tilt=self.postprocessor.horizontal_rapid_tilt_seen if horizontal else self.postprocessor.last_rapid_tilt,
+            rapid_descent=self.postprocessor.last_recent_fast_drop,
+            transition_descent=self.postprocessor.horizontal_fast_drop_seen,
+            horizontal_motion=self.postprocessor.last_horizontal_motion,
+            model_ready=model_ready, model_consensus=model_consensus,
+            model_predicts_fall=model_predicts_fall,
+            model_confident=model_confident,
+            geometry_ready=len(self.postprocessor.motion_history) >= 3,
+        )
+        final_state, verdict = fusion.state, fusion.verdict
+        decision_source = fusion.source
+        near_floor = False
+        floor_duration = 0.0
+        if metrics is not None:
+            leg_indices = [11, 12, 13, 14, 15, 16]
+            legs_visible = bool(np.all(scores[leg_indices] >= 0.25)
+                                and np.isfinite(points[leg_indices, :2]).all()
+                                and np.all(np.any(points[leg_indices, :2] != 0, axis=1)))
+            hips, knees, ankles = points[11:13, 1], points[13:15, 1], points[15:17, 1]
+            hip_y = float(np.mean(hips))
+            leg_height = float(np.mean(ankles - hips))
+            planted = legs_visible and bool(np.all(knees > hips) and np.all(ankles > knees))
+            bend_angle = self.postprocessor.bending_angle_degrees
+            if planted and metrics.trunk_tilt_degrees < bend_angle / 2:
+                self.floor_reference = (float(np.mean(ankles)), metrics.body_height, timestamp_s)
+            if self.bend_support is None and planted and metrics.trunk_tilt_degrees >= bend_angle:
+                self.bend_support = (timestamp_s, hip_y, leg_height)
+            if self.bend_support is not None:
+                started, initial_hip_y, initial_leg_height = self.bend_support
+                recovered = planted and metrics.trunk_tilt_degrees < bend_angle / 2
+                lost_support = (legs_visible and hip_y - initial_hip_y >= 0.35 * initial_leg_height
+                                and leg_height <= 0.55 * initial_leg_height)
+                if recovered:
+                    self.bend_support = None
+                    self.postprocessor.update(None, timestamp_s)
+                    self.sequence.clear()
+                    self.model_votes.clear()
+                    final_state, verdict, decision_source = "NORMAL", "NO_FALL", "bend_recovered"
+                elif lost_support and (horizontal or fusion.verdict == "FALL"):
+                    self.bend_support = None
+                    final_state, verdict, decision_source = "FALL", "FALL", "bend_support_lost"
+                elif planted and timestamp_s - started >= 2.0:
+                    final_state, verdict, decision_source = "BENDING", "NO_FALL", "bend_stable"
+                else:
+                    final_state, verdict, decision_source = "VERIFYING_FALL", "PENDING", "bend_verifying"
+            head = points[:5, :2]
+            head_visible = (scores[:5] >= 0.25) & np.isfinite(head).all(axis=1) & np.any(head != 0, axis=1)
+            hips_visible = (scores[11:13] >= 0.25) & np.isfinite(points[11:13, :2]).all(axis=1)
+            head_y = float(np.median(head[head_visible, 1])) if head_visible.any() else None
+            visible_hip_y = float(np.mean(hips[hips_visible])) if hips_visible.any() else None
+            if self.floor_reference is not None:
+                floor_y, upright_height, last_standing = self.floor_reference
+                if last_standing == timestamp_s:
+                    self.standing_head_hip = (head_y, visible_hip_y) if head_y is not None and visible_hip_y is not None else None
+                tolerance = 0.25 * upright_height
+                near_floor = bool(horizontal and head_visible.any() and hips_visible.any()
+                                  and abs(head_y - floor_y) <= tolerance
+                                  and abs(visible_hip_y - floor_y) <= tolerance)
+                recent_standing = timestamp_s - last_standing <= 3.0
+                initial_pose = self.standing_head_hip
+                leg_vectors = points[15:17, :2] - points[11:13, :2]
+                leg_horizontal = legs_visible and bool(np.any(
+                    (np.abs(leg_vectors[:, 0]) >= 0.15 * upright_height)
+                    & (np.abs(leg_vectors[:, 0]) >= 2 * np.abs(leg_vectors[:, 1]))
+                ))
+                head_horizontal = False
+                if head_visible.any() and np.all(scores[5:7] >= 0.25):
+                    head_offset = np.median(head[head_visible], axis=0) - np.mean(points[5:7, :2], axis=0)
+                    head_horizontal = bool(abs(head_offset[0]) >= 0.08 * upright_height
+                                           and abs(head_offset[0]) >= 2 * abs(head_offset[1]))
+                compact_low = bool(
+                    not horizontal and not planted and (legs_visible or head_horizontal) and initial_pose is not None
+                    and head_y is not None and visible_hip_y is not None
+                    and (abs(head_y - floor_y) <= 0.30 * upright_height
+                         or leg_horizontal or head_horizontal)
+                    and abs(visible_hip_y - floor_y) <= tolerance
+                    and head_y - initial_pose[0] >= 0.45 * upright_height
+                    and visible_hip_y - initial_pose[1] >= 0.25 * upright_height
+                )
+                compact_confirmed = False
+                if compact_low and recent_standing and (
+                    self.compact_landing is not None or (
+                        self.postprocessor.last_recent_fast_drop and self.postprocessor.last_rapid_tilt
+                    )
+                ):
+                    started, count = self.compact_landing or (timestamp_s, 0)
+                    self.compact_landing = (started, count + 1)
+                    compact_confirmed = count >= 2 and timestamp_s - started >= 0.08
+                else:
+                    self.compact_landing = None
+                rapid_descent = self.postprocessor.horizontal_fast_drop_seen
+                rapid_tilt = self.postprocessor.horizontal_rapid_tilt_seen
+                strong_model = bool(model_consensus and probability is not None
+                                    and probability >= max(0.9, confidence_threshold))
+                paired_evidence = bool(rapid_descent and rapid_tilt and probability is not None
+                                       and probability >= 0.60)
+                still_supported = self.bend_support is not None and planted
+                if near_floor and recent_standing and not still_supported and initial_pose is not None:
+                    head_drop = head_y - initial_pose[0]
+                    hip_drop = visible_hip_y - initial_pose[1]
+                    if head_drop >= 0.40 * upright_height and hip_drop >= 0.22 * upright_height:
+                        if self.floor_candidate_since is None:
+                            self.floor_candidate_since = timestamp_s
+                    else:
+                        self.floor_candidate_since = None
+                else:
+                    self.floor_candidate_since = None
+                trajectory_fall = (self.floor_candidate_since is not None
+                                   and timestamp_s - self.floor_candidate_since >= 0.6
+                                   and (rapid_descent or rapid_tilt))
+                source = None
+                if near_floor and recent_standing and not still_supported:
+                    if geometry_fall:
+                        source = "floor_fall"
+                    elif strong_model and (rapid_descent or rapid_tilt):
+                        source = "floor_lstm"
+                    elif paired_evidence:
+                        source = "floor_agreement"
+                    elif trajectory_fall:
+                        source = "floor_trajectory"
+                elif compact_confirmed:
+                    source = "floor_compact"
+                if (near_floor or compact_low) and (self.on_floor_since is not None or source is not None):
+                    if self.on_floor_since is None:
+                        self.on_floor_since = timestamp_s
+                    floor_duration = timestamp_s - self.on_floor_since
+                    final_state, verdict = "FALL", "FALL"
+                    decision_source = "floor_persistent" if floor_duration >= 5.0 else source or (
+                        "floor_compact" if compact_low else "floor_fall"
+                    )
+                else:
+                    self.on_floor_since = None
+            # A clip can start on a bed, without any standing floor reference.
+            if horizontal and head_y is not None and visible_hip_y is not None:
+                if self.lying_reference is None:
+                    self.lying_reference = (head_y, visible_hip_y, timestamp_s)
+                reference_head, reference_hip, lying_since = self.lying_reference
+                elapsed = timestamp_s - lying_since
+                drop = min(head_y - reference_head, visible_hip_y - reference_hip)
+                scale = metrics.reference_body_size
+                if (scale > 0 and drop >= 0.25 * scale and
+                        (self.lying_drop_since is not None or
+                         (elapsed >= 0.5 and self.postprocessor.last_recent_fast_drop))):
+                    if self.lying_drop_since is None:
+                        self.lying_drop_since = timestamp_s
+                    duration = timestamp_s - self.lying_drop_since
+                    if duration >= hold:
+                        self.lying_drop_confirmed = True
+                    if self.lying_drop_confirmed:
+                        floor_duration = max(floor_duration, duration)
+                        final_state, verdict, decision_source = "FALL", "FALL", "lying_drop"
+                    elif verdict != "FALL":
+                        final_state, verdict, decision_source = "VERIFYING_FALL", "PENDING", "lying_drop_verifying"
+                else:
+                    self.lying_drop_since = None
+                    self.lying_drop_confirmed = False
+                    if elapsed >= 0.5 and (scale <= 0 or drop < 0.25 * scale):
+                        self.lying_reference = (head_y, visible_hip_y, lying_since)
+                    if (elapsed >= 0.5 and self.on_floor_since is None
+                            and (self.floor_reference is None or timestamp_s - self.floor_reference[2] > 3.0)):
+                        final_state, verdict, decision_source = "LYING", "NO_FALL", "lying_without_drop"
+            else:
+                self.lying_reference = None
+                self.lying_drop_since = None
+                self.lying_drop_confirmed = False
+        floor_sources = {"floor_fall", "floor_persistent", "floor_lstm", "floor_agreement", "floor_trajectory", "floor_compact"}
+        if verdict == "FALL" and decision_source not in floor_sources | {"lying_drop"}:
+            final_state, verdict, decision_source = "VERIFYING_FALL", "PENDING", "floor_verifying"
         analysis = {
             "valid_keypoint": True,
             "keypoint_frames": len(self.sequence),
             "model_ready": model_ready,
+            "model_pose_valid": bool(model_pose_valid),
+            "lstm_threshold": confidence_threshold,
             "lstm_fall_probability": probability,
             "lstm_prediction": "FALL" if prediction == 1 else "NO_FALL" if prediction == 0 else None,
             "lstm_confidence": model_confidence,
             "lstm_confident": model_confident,
             "lstm_consensus": model_consensus,
-            "lstm_supports_fall": bool(model_consensus and prediction == 1),
+            "lstm_supports_fall": bool(model_confident and prediction == 1),
             "geometry_state": geometry_state,
-            "geometry_verdict": "FALL" if geometry_fall else "NO_FALL",
+            "geometry_verdict": "FALL" if geometry_fall else "UNCERTAIN" if horizontal or self.postprocessor.last_recent_fast_drop or self.postprocessor.last_rapid_tilt else "NO_FALL",
             "algorithms_agree": agrees,
+            "decision_source": decision_source,
+            "near_estimated_floor": near_floor,
+            "floor_duration_s": round(floor_duration, 2),
+            "fall_phase": ("ON_FLOOR" if decision_source == "floor_persistent" else
+                           "FALLEN" if verdict == "FALL" else
+                           "LOSS_OF_BALANCE" if verdict == "PENDING" and final_state == "VERIFYING_FALL" else
+                           "STANDING" if final_state == "NORMAL" else final_state),
             "horizontal_pose": horizontal,
             "box_ratio": round(ratio, 3),
             "trunk_tilt_degrees": round(metrics.trunk_tilt_degrees, 1) if metrics else None,
             "downward_speed_body_heights_s": round(metrics.downward_speed_body_heights_s, 3) if metrics else None,
             "rapid_descent": self.postprocessor.last_recent_fast_drop,
+            "rapid_tilt": self.postprocessor.last_rapid_tilt,
+            "horizontal_rapid_tilt_seen": self.postprocessor.horizontal_rapid_tilt_seen,
+            "horizontal_fast_drop_seen": self.postprocessor.horizontal_fast_drop_seen,
+            "geometry_transition_evidence": self.postprocessor.horizontal_fast_drop_seen and (self.postprocessor.horizontal_rapid_tilt_seen or self.postprocessor.horizontal_origin_upright),
             "horizontal_motion": self.postprocessor.last_horizontal_motion,
             "horizontal_duration_s": round(metrics.horizontal_duration_s, 2) if metrics else 0.0,
             "required_horizontal_duration_s": round(hold, 2),
+            "horizontal_confirm_frames": metrics.horizontal_frames if metrics else 0,
+            "rotation_change_degrees": round(metrics.rotation_change_degrees, 1) if metrics else 0.0,
+            "normalized_drop": round(metrics.normalized_drop, 3) if metrics else 0.0,
+            "recovered_upright": self.postprocessor.upright_since_s is not None and timestamp_s - self.postprocessor.upright_since_s >= 0.35,
             "verdict": verdict,
             "state": final_state,
         }
-        if verdict == "FALL":
-            analysis["reason"] = ("LSTM và luật hình học cùng xác định FALL; "
-                                  f"độ tin cậy lớp LSTM {model_confidence:.1%}." )
-        elif verdict == "NO_FALL":
-            analysis["reason"] = ("LSTM và luật hình học cùng xác định NO_FALL; "
-                                  f"độ tin cậy lớp LSTM {model_confidence:.1%}.")
-        elif verdict == "UNCERTAIN":
-            analysis["reason"] = (f"Hai bộ phân tích chưa đồng thuận: LSTM={analysis['lstm_prediction']}, "
-                                  f"hình học={analysis['geometry_verdict']}. Chưa chốt FALL/NO_FALL.")
-        elif horizontal and not self.postprocessor.last_horizontal_motion and not self.postprocessor.last_recent_fast_drop:
-            analysis["reason"] = ("Tư thế nằm ngang đơn thuần chưa đủ kết luận ngã; chưa thấy cú rơi hoặc cử động khớp rõ. "
-                                  + ("LSTM chưa đủ 40 frame keypoint." if not model_ready else "Đang chờ LSTM ổn định và đối chiếu."))
-        elif horizontal and geometry_state != "FALL" and self.postprocessor.last_horizontal_motion and not self.postprocessor.last_recent_fast_drop:
-            analysis["reason"] = (f"Đã thấy cử động keypoint khi nằm ngang; cần giữ tư thế thêm để xác minh ({metrics.horizontal_duration_s:.1f}/{hold:.1f} giây). "
-                                  + ("LSTM chưa đủ 40 frame keypoint." if not model_ready else ""))
-        elif not model_ready:
-            analysis["reason"] = "Chưa đủ 40 khung hình keypoint hợp lệ để LSTM phân loại; luật hình học chưa xác nhận ngã."
-        elif not model_consensus:
-            analysis["reason"] = "LSTM chưa cho cùng một nhãn ổn định; đang tiếp tục phân tích và so sánh với luật hình học."
-        else:
-            analysis["reason"] = "Đang chờ luật hình học và LSTM cùng xác định một kết quả."
+        analysis["reason"] = {
+            "lstm": f"Đã đủ 40 khung keypoint hợp lệ; điểm LSTM ngã {probability:.1%} vượt ngưỡng {confidence_threshold:.0%}." if probability is not None else "LSTM xác nhận ngã.",
+            "lstm_geometry": "LSTM đủ 40 khung xác nhận ngã; chuỗi chuyển động hình học cũng ủng hộ.",
+            "geometry_fallback": "Chuỗi keypoint hạ nhanh và đổi tư thế đã được xác minh qua nhiều khung hình; kết luận ngã bằng hình học.",
+            "geometry_pending": "Đã thấy tư thế ngang nhưng thiếu chuỗi chuyển động rõ để xác nhận ngã; cần xác minh.",
+            "transition": "Phát hiện chuyển động nhanh; đang xác minh tư thế sau chuyển động.",
+            "lstm_no_fall": "LSTM đủ dữ liệu và chuyển động hiện tại chưa cho thấy ngã.",
+            "model_uncertain": "Điểm LSTM chưa vượt ngưỡng quyết định; hình học cũng chưa đủ bằng chứng xác nhận.",
+            "warming_up": "Đang thu thập chuỗi chuyển động keypoint để suy luận.",
+            "geometry_normal": "Chưa đủ 40 khung cho LSTM; hình học hiện chưa ghi nhận chuỗi chuyển động ngã.",
+            "bend_verifying": "Người đang cúi; theo dõi chân trụ và độ hạ của hông trước khi xác nhận ngã.",
+            "bend_stable": "Sau 2 giây theo dõi, chân vẫn đứng trụ; tiếp tục quan sát.",
+            "bend_recovered": "Người đã đứng thẳng lại và giữ được chân trụ.",
+            "bend_support_lost": "Hông hạ rõ rệt và chân mất tư thế chống đỡ sau khi cúi; xác nhận ngã.",
+            "floor_verifying": "Có dấu hiệu ngã; đang kiểm tra chuyển động và vị trí đầu, hông so với mức sàn ước tính.",
+            "floor_fall": "Hạ nhanh, thân xoay ngang, đầu và hông gần mức sàn ước tính.",
+            "floor_lstm": "LSTM dự đoán ngã ổn định với điểm cao; tư thế và chuyển động phù hợp với cú ngã.",
+            "floor_agreement": "LSTM và hình học cùng ghi nhận dấu hiệu ngã; đầu và hông gần mức sàn ước tính.",
+            "floor_trajectory": "Quỹ đạo xác nhận đầu và hông cùng hạ đáng kể rồi duy trì gần mức sàn ít nhất 0,6 giây.",
+            "floor_compact": "Hạ nhanh và xoay thân, hông xuống thấp, có dấu hiệu mất trụ hoặc đầu nghiêng ngang qua nhiều khung dù thân còn gập.",
+            "floor_persistent": "Đầu và hông vẫn gần mức sàn ước tính sau ít nhất 5 giây; chưa thấy người đứng dậy.",
+            "lying_without_drop": "Người đang nằm; không thấy đầu và hông cùng tụt nhanh xuống thấp hơn.",
+            "lying_drop_verifying": "Đầu và hông cùng tụt nhanh từ tư thế nằm; đang xác minh vị trí thấp hơn.",
+            "lying_drop": "Đầu và hông cùng tụt nhanh từ tư thế nằm và duy trì ở vị trí thấp hơn.",
+        }[decision_source]
         analysis["state"] = final_state
-        return {"state": final_state, "confidence": probability or 0.0, "analysis": analysis}
+        if decision_source in floor_sources - {"floor_lstm"} | {"lying_drop"}:
+            torso_scores = scores[[5, 6, 11, 12]]
+            decision_confidence = float(np.clip(np.mean(torso_scores[torso_scores >= 0.25]), 0, 1))
+            analysis["confidence_kind"] = "pose_keypoint_quality"
+        else:
+            decision_confidence = probability or 0.0
+            analysis["confidence_kind"] = "lstm_score"
+        return {"state": final_state, "confidence": decision_confidence, "analysis": analysis}
 
 
 def get_live_decision_stream(camera_id: str, settings: dict) -> FallDecisionStream:
@@ -919,38 +1134,30 @@ def get_live_decision_stream(camera_id: str, settings: dict) -> FallDecisionStre
 
 
 def validate_upper_body_keypoints(keypoints, confidence, threshold=0.35):
-    """Reject truncated/uncertain upper-body poses before fall processing.
+    """Geometry needs a reliable shoulder/hip pair; the head may be occluded.
 
-    COCO order: nose=0, left/right shoulder=5/6. Require a confident nose
-    and at least one confident shoulder. In particular, losing both shoulders
-    or the head makes the frame INVALID_FRAME.
+    The LSTM separately checks all five feature points, including the nose.
     """
     if keypoints is None or confidence is None:
         return False, "missing_pose_or_confidence"
     points = np.asarray(keypoints)
     conf = np.asarray(confidence).reshape(-1)
-    if points.ndim != 2 or points.shape[0] < 7 or len(conf) < 7:
+    if points.ndim != 2 or points.shape[0] < 17 or points.shape[1] < 2 or len(conf) < 17:
         return False, "incomplete_keypoint_array"
-    if not np.isfinite(points[:7, :2]).all() or not np.isfinite(conf[:7]).all():
+    torso = [5, 6, 11, 12]
+    if not np.isfinite(points[torso, :2]).all() or not np.isfinite(conf[torso]).all():
         return False, "non_finite_keypoint"
-    nose_ok = conf[0] > threshold and np.any(np.abs(points[0, :2]) > 1e-6)
-    shoulders_ok = [conf[i] > threshold and np.any(np.abs(points[i, :2]) > 1e-6)
-                    for i in (5, 6)]
-    if not nose_ok:
-        return False, "head_not_confident"
-    if not any(shoulders_ok):
-        return False, "both_shoulders_missing_or_uncertain"
+    reliable = lambda index: conf[index] > threshold and np.any(np.abs(points[index, :2]) > 1e-6)
+    if not any(reliable(shoulder) and reliable(hip) for shoulder, hip in ((5, 11), (6, 12))):
+        return False, "no_reliable_shoulder_hip_pair"
     return True, "ok"
 
 
 def validate_person_box_and_hips(keypoints, confidence, frame_shape, threshold=0.35,
-                                min_height_ratio=0.25, edge_margin_ratio=0.02,
-                                min_hip_top_margin_ratio=0.05, bbox_xyxy=None):
-    """Reject tiny/truncated person boxes and implausible hip positions.
+                                min_height_ratio=0.20, bbox_xyxy=None):
+    """Reject tiny poses using their long extent, allowing horizontal bodies.
 
-    Returns (valid, reason, bbox_xyxy). COCO hips are keypoints 11 and 12.
-    Bounding box is computed from confident pose points; boxes touching top or
-    bottom edges are ignored because their aspect ratio is unreliable.
+    Touching an image edge does not itself invalidate reliable torso points.
     """
     if keypoints is None or confidence is None or frame_shape is None:
         return False, "missing_box_inputs", None
@@ -971,20 +1178,17 @@ def validate_person_box_and_hips(keypoints, confidence, frame_shape, threshold=0
         x1, y1, x2, y2 = map(float, bbox_xyxy)
     box = (float(x1), float(y1), float(x2), float(y2))
     box_height = float(y2 - y1)
-    if box_height / frame_height < min_height_ratio:
-        return False, "person_box_too_short", box
-    edge_margin = edge_margin_ratio * frame_height
-    if y1 <= edge_margin or y2 >= frame_height - edge_margin:
-        return False, "person_box_truncated_at_frame_edge", box
+    box_width = float(x2 - x1)
+    if box_height <= 1 or box_width <= 1 or max(box_height / frame_height, box_width / frame_width) < min_height_ratio:
+        return False, "person_extent_too_small", box
 
     hip_indices = [i for i in (11, 12) if valid[i]]
     if not hip_indices:
         return False, "hip_keypoints_missing", box
     hip_y = float(np.mean(points[hip_indices, 1]))
-    # A hip almost at the top is inconsistent with a complete upright person
-    # and usually means the detected person was severely cropped.
-    if hip_y < min_hip_top_margin_ratio * frame_height:
-        return False, "hip_too_close_to_top_edge", box
+    hip_x = float(np.mean(points[hip_indices, 0]))
+    if not (0 <= hip_y < frame_height and 0 <= hip_x < frame_width):
+        return False, "hip_outside_frame", box
     return True, "ok", box
 
 SKELETON = [(0, 1), (0, 2), (1, 3), (2, 4), (5, 6), (5, 7), (7, 9), (6, 8), (8, 10), (5, 11), (6, 12), (11, 12), (11, 13), (13, 15), (12, 14), (14, 16)]
@@ -1122,6 +1326,7 @@ async def analyze_camera_frame(camera_id: str, file: UploadFile = File(...), aut
         if previous is None or (now - previous).total_seconds() >= 30:
             last_fall_alert[camera_id] = now
             saved_event = await save_event(FallEvent(person_id="unknown", camera_id=camera_id, confidence=model_confidence,
+                                                      confidence_kind=decision["analysis"]["confidence_kind"],
                                                       message=f"Ph\u00e1t hi\u1ec7n ng\u01b0\u1eddi t\u00e9 ng\u00e3 t\u1ea1i {camera_id}"))
             event_id = saved_event["id"]
             asyncio.create_task(finalize_incident_clip(camera_id, event_id, frame_timestamp))
@@ -1227,20 +1432,8 @@ async def analyze_video(file: UploadFile = File(...), authorization: str | None 
                                                  "reason": "Không có người/pose hợp lệ trong frame này."}})
             if last_state == "FALL":
                 cv2.rectangle(frame, (0, 0), (width, 46), (30, 30, 210), -1)
-                cv2.putText(frame, f"FALL DETECTED  {last_confidence:.0%}", (14, 32),
+                cv2.putText(frame, "FALL DETECTED", (14, 32),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
-            elif last_state == "BENDING":
-                cv2.rectangle(frame, (0, 0), (width, 46), (0, 150, 220), -1)
-                cv2.putText(frame, "BENDING - CONTROLLED MOVEMENT", (14, 32),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
-            elif last_state == "LYING":
-                cv2.rectangle(frame, (0, 0), (width, 46), (0, 110, 90), -1)
-                cv2.putText(frame, "HORIZONTAL POSTURE - NO FALL CONFIRMED", (14, 32),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2, cv2.LINE_AA)
-            elif last_state == "VERIFYING_FALL":
-                cv2.rectangle(frame, (0, 0), (width, 46), (0, 150, 220), -1)
-                cv2.putText(frame, "VERIFYING FALL - COMBINING MODEL AND MOTION", (14, 32),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.62, (255, 255, 255), 2, cv2.LINE_AA)
             writer.write(frame)
             frame_index += 1
     finally:
@@ -1257,29 +1450,29 @@ async def analyze_video(file: UploadFile = File(...), authorization: str | None 
             run = []
     if run:
         falls.extend(run)
-    best = max(predictions, key=lambda item: item["confidence"], default={"confidence": 0.0, "time": None})
+    best = falls[0] if falls else max(predictions, key=lambda item: item["confidence"], default={"confidence": 0.0, "time": None})
+    first_fall_analysis = falls[0].get("analysis", {}) if falls else {}
     frame_analyses = [item["analysis"] for item in predictions if isinstance(item.get("analysis"), dict)]
     model_probabilities = [float(item["lstm_fall_probability"]) for item in frame_analyses
                            if item.get("lstm_fall_probability") is not None]
-    last_valid_analysis = next((item for item in reversed(frame_analyses) if item.get("valid_keypoint")), None)
-    last_verdict = last_valid_analysis.get("verdict") if last_valid_analysis else None
-    final_verdict = "FALL" if falls else last_verdict if last_verdict in {"NO_FALL", "UNCERTAIN"} else "UNCERTAIN"
-    if falls:
-        final_reason = next((item.get("reason") for item in frame_analyses
-                             if item.get("state") == "FALL" and item.get("reason")), "Đã đủ điều kiện xác nhận FALL.")
-    elif final_verdict == "UNCERTAIN" and not model_probabilities:
-        final_reason = "LSTM chưa đủ 40 frame keypoint hợp lệ nên chưa thể đối chiếu hai thuật toán; video chưa có kết luận cuối."
-    elif last_valid_analysis:
-        final_reason = last_valid_analysis.get("reason") or "Hai thuật toán chưa cùng đồng thuận; cần thêm dữ liệu."
-    else:
-        final_reason = "Không có frame keypoint hợp lệ để phân tích."
+    last_valid_analysis = next((item for item in reversed(frame_analyses) if item.get("valid_keypoint")), {})
+    final_verdict, final_reason = summarize_clip(predictions)
     analysis_summary = {
+        "ablation_first_detection_s": summarize_variants(predictions),
+        "first_detection_source": first_fall_analysis.get("decision_source"),
+        "decision_policy": "temporal_floor_fsm_v3",
+        "max_floor_duration_s": max((item.get("floor_duration_s", 0.0) for item in frame_analyses), default=0.0),
+        "persistent_floor_posture": any(item.get("fall_phase") == "ON_FLOOR" for item in frame_analyses),
+        "decision_source": first_fall_analysis.get("decision_source") if falls else last_valid_analysis.get("decision_source"),
         "keypoint_frames": pose_frame_count,
+        "lstm_max_keypoint_frames": max((item.get("keypoint_frames", 0) for item in frame_analyses), default=0),
         "model_ready": bool(model_probabilities),
         "model_ready_frames": sum(bool(item.get("model_ready")) for item in frame_analyses),
         "model_max_fall_probability": max(model_probabilities, default=None),
         "model_supports_fall": any(bool(item.get("lstm_supports_fall")) for item in frame_analyses),
         "rapid_descent_seen": any(bool(item.get("rapid_descent")) for item in frame_analyses),
+        "rapid_tilt_seen": any(bool(item.get("rapid_tilt")) for item in frame_analyses),
+        "geometry_confirmed": any(item.get("geometry_state") == "FALL" for item in frame_analyses),
         "horizontal_motion_seen": any(bool(item.get("horizontal_motion")) for item in frame_analyses),
         "horizontal_frames": sum(bool(item.get("horizontal_pose")) for item in frame_analyses),
         "max_horizontal_duration_s": max((float(item.get("horizontal_duration_s") or 0) for item in frame_analyses), default=0.0),
@@ -1287,14 +1480,19 @@ async def analyze_video(file: UploadFile = File(...), authorization: str | None 
         "verdict": final_verdict,
         "reason": final_reason,
     }
+    video_event_id = None
     if falls:
-        await save_event(FallEvent(person_id="unknown", camera_id="uploaded_video",
-                                     confidence=float(max(x["confidence"] for x in falls)),
+        video_event = await save_event(FallEvent(person_id="unknown", camera_id="uploaded_video",
+                                     confidence=float(best["confidence"]),
+                                     confidence_kind=best.get("analysis", {}).get("confidence_kind"),
                                      message="Ph\u00e1t hi\u1ec7n ng\u01b0\u1eddi t\u00e9 ng\u00e3 trong video t\u1ea3i l\u00ean"))
+        video_event_id = video_event["id"]
     timeline = predictions[::max(1, len(predictions)//100)]
     return {"result": final_verdict,
-            "postprocess_result": "FALL" if falls else final_verdict if final_verdict == "UNCERTAIN" else "VERIFYING_FALL" if verifying_frame_count else "BENDING" if bending_frame_count else "LYING" if lying_frame_count else "NORMAL",
+            "event_id": video_event_id,
+            "postprocess_result": final_verdict,
             "confidence": best["confidence"],
+            "confidence_kind": best.get("analysis", {}).get("confidence_kind") if falls else None,
             "analysis_summary": analysis_summary,
             "detections": len(falls), "first_detection_time": falls[0]["time"] if falls else None,
             "duration": round(frame_count / fps, 2) if fps else 0,
@@ -1392,6 +1590,20 @@ def update_event(event_id: int, update: EventUpdate,
     EVENTS_FILE.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
     record_audit("incident.updated", {"id": event_id, "status": update.status})
     return public_event(item)
+
+
+@app.post("/api/events/{event_id}/acknowledge")
+def acknowledge_event(event_id: int, authorization: str | None = Header(default=None)) -> dict:
+    user = get_session_user(authorization)
+    events = read_events()
+    event = next((item for item in events if item.get("id") == event_id), None)
+    if event is None:
+        raise HTTPException(404, "Không tìm thấy thông báo.")
+    viewers = event.setdefault("acknowledged_by", [])
+    if user["id"] not in viewers:
+        viewers.append(user["id"])
+        EVENTS_FILE.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
+    return public_event(event)
 
 
 @app.post("/api/events/acknowledge-all")

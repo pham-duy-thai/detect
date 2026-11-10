@@ -1,4 +1,5 @@
 const webcamStreams = new Map();
+const webcamRequests = new Map();
 const frameApiBase = (window.FALLGUARD_API_BASE || (location.protocol === "https:" ? location.origin : `${location.protocol}//${location.hostname}:8000`)).replace(/\/$/, "");
 const keypointSkeleton = [[0,1],[0,2],[1,3],[2,4],[5,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16]];
 
@@ -8,13 +9,26 @@ document.addEventListener("click", async event => {
   event.stopImmediatePropagation();
   const card = button.closest(".camera-card");
   const id = button.dataset.toggle;
+  if (button.dataset.source !== "0") return;
   if (webcamStreams.has(id)) { stopWebcam(id, card); return; }
+  if (webcamRequests.has(id)) return;
   if (!navigator.mediaDevices?.getUserMedia) {
     alert("Không truy cập được camera. Hãy mở FallGuard bằng Safari/Chrome qua HTTPS hoặc localhost.");
     return;
   }
+  const request = new AbortController();
+  webcamRequests.set(id, request);
+  button.setAttribute("aria-busy", "true");
+  let stream;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    if (request.signal.aborted || document.hidden || !card.isConnected) {
+      stream.getTracks().forEach(track => track.stop());
+      return;
+    }
     const video = document.createElement("video");
     video.autoplay = true;
     video.muted = true;
@@ -26,6 +40,8 @@ document.addEventListener("click", async event => {
     canvas.height = 480;
     canvas.className = "keypoint-overlay";
     const context = canvas.getContext("2d");
+    const frame = document.createElement("canvas");
+    const frameContext = frame.getContext("2d");
     const preview = card.querySelector(".camera-preview");
     preview.querySelector(".webcam-video")?.remove();
     preview.querySelector(".keypoint-overlay")?.remove();
@@ -35,7 +51,7 @@ document.addEventListener("click", async event => {
     state.className = "webcam-state";
     state.textContent = "Đang kết nối AI…";
     preview.append(state);
-    const item = { stream, video, canvas, context, card, timer: null, sending: false, lastAlert: 0 };
+    const item = { stream, video, canvas, context, card, request, timer: null, sending: false, lastAlert: 0 };
     webcamStreams.set(id, item);
     button.classList.add("checked");
     button.setAttribute("aria-pressed", "true");
@@ -48,27 +64,39 @@ document.addEventListener("click", async event => {
     video.addEventListener("loadeddata", () => { state.textContent = "Đang phân tích chuyển động"; }, { once: true });
 
     const sendFrame = async () => {
-      if (item.sending || video.readyState < 2 || !webcamStreams.has(id)) return;
+      if (item.sending || video.readyState < 2 || !video.videoWidth || !video.videoHeight ||
+          document.hidden || webcamStreams.get(id) !== item) return;
       item.sending = true;
-      const frame = document.createElement("canvas");
-      frame.width = 640;
-      frame.height = 480;
-      frame.getContext("2d").drawImage(video, 0, 0, frame.width, frame.height);
+      const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
+      const width = Math.round(video.videoWidth * scale);
+      const height = Math.round(video.videoHeight * scale);
+      if (frame.width !== width || frame.height !== height) {
+        frame.width = width;
+        frame.height = height;
+      }
+      frameContext.drawImage(video, 0, 0, width, height);
       frame.toBlob(async blob => {
+        const uploadRequest = new AbortController();
+        const cancelUpload = () => uploadRequest.abort();
+        const timeout = setTimeout(cancelUpload, 8000);
+        request.signal.addEventListener("abort", cancelUpload, { once: true });
         try {
-          if (!blob) return;
+          if (!blob || request.signal.aborted) return;
+          const upload = new FormData();
+          upload.append("file", blob, "frame.jpg");
           const response = await fetch(`${frameApiBase}/api/cameras/${encodeURIComponent(id)}/frame`, {
-            method: "POST", headers: { "Content-Type": "image/jpeg", ...(window.authHeaders?.() || {}) }, body: blob
+            method: "POST", headers: window.authHeaders?.() || {}, body: upload, signal: uploadRequest.signal
           });
           const result = await response.json();
+          if (request.signal.aborted) return;
           if (!response.ok) throw new Error(result.detail || "AI không phản hồi.");
           drawKeypointOverlay(item, result.keypoints || [], result.skeleton || keypointSkeleton,
             result.state === "FALL", frame.width, frame.height, result.selected_bbox);
           const labels = {
-            FALL: `⚠ PHÁT HIỆN TÉ NGÃ · ${Math.round((result.confidence || 0) * 100)}%`,
+            FALL: `⚠ PHÁT HIỆN TÉ NGÃ · ${FallGuardScore.label({...result, confidence_kind: result.analysis?.confidence_kind})}`,
             BENDING: "Đang cúi/nghiêng · chưa xác nhận ngã",
             LYING: "Tư thế nằm/ngang · chưa đủ dấu hiệu xác nhận ngã",
-            VERIFYING_FALL: "Đang xác minh · đối chiếu LSTM và chuyển động",
+            VERIFYING_FALL: "Đang xác minh chuỗi chuyển động keypoint",
             NO_PERSON: "Không phát hiện người",
             WARMING_UP: "Đang phân tích chuyển động",
             SCHEDULED_OFF: "AI đang tạm dừng theo lịch",
@@ -76,7 +104,9 @@ document.addEventListener("click", async event => {
             OUTSIDE_ROI: "Người đang ngoài vùng phân tích"
           };
           const analysis = result.analysis;
-          const baseLabel = labels[result.frame_state] || labels[result.state] || "Đang giám sát an toàn";
+          const baseLabel = analysis?.fall_phase === "ON_FLOOR" && result.frame_state !== "INVALID_FRAME"
+            ? "⚠ Vẫn nằm thấp · chưa thấy đứng dậy"
+            : labels[result.frame_state] || labels[result.state] || "Đang giám sát an toàn";
           if (analysis && Number.isFinite(analysis.keypoint_frames)) {
             const modelLabel = analysis.model_ready ? `LSTM ${Math.round((analysis.lstm_fall_probability || 0) * 100)}%` : `keypoint ${analysis.keypoint_frames || 0}/40`;
             const geometryLabel = analysis.horizontal_pose ? `ngang ${Number(analysis.horizontal_duration_s || 0).toFixed(1)}s` : "chưa ngang";
@@ -85,24 +115,38 @@ document.addEventListener("click", async event => {
             state.title = analysis.reason || "";
           } else { state.textContent = baseLabel; state.title = analysis?.reason || ""; }
           state.className = `webcam-state ${result.state === "FALL" ? "fall" : ["BENDING", "VERIFYING_FALL", "VERIFYING_MODEL", "UNCERTAIN"].includes(result.state) ? "bending" : result.frame_state === "INVALID_FRAME" ? "invalid" : "safe"}`;
-          if (result.state === "FALL" && Date.now() - item.lastAlert > 5000) {
+          if (result.state === "FALL" && result.frame_state !== "INVALID_FRAME" && Date.now() - item.lastAlert > 5000) {
             item.lastAlert = Date.now();
             playFallTone();
-            showFallAlert(`Phát hiện té ngã qua camera ${id}`, { event_id: result.event_id, camera_id: id, confidence: result.confidence });
+            showFallAlert(`Phát hiện té ngã qua camera ${id}`, { event_id: result.event_id, camera_id: id, confidence: result.confidence, confidence_kind: result.analysis?.confidence_kind });
           }
         } catch (error) {
-          state.textContent = error.message || "Mất kết nối AI";
+          if (request.signal.aborted) return;
+          state.textContent = uploadRequest.signal.aborted ? "AI phản hồi chậm · đang thử lại" : error.message || "Mất kết nối AI";
           state.className = "webcam-state fall";
-        } finally { item.sending = false; }
+        } finally {
+          clearTimeout(timeout);
+          request.signal.removeEventListener("abort", cancelUpload);
+          item.sending = false;
+        }
       }, "image/jpeg", 0.78);
     };
-    item.timer = setInterval(sendFrame, 700);
+    // A slow request is skipped rather than queued; collect motion more
+    // frequently than the previous 700 ms cadence when hardware allows it.
+    item.timer = setInterval(sendFrame, 150);
     item.timer.unref?.();
   } catch (error) {
+    const cancelled = request.signal.aborted;
+    if (webcamStreams.get(id)?.request === request) stopWebcam(id, card);
+    else stream?.getTracks().forEach(track => track.stop());
+    if (cancelled) return;
     const message = error.name === "NotAllowedError" ? "Bạn chưa cấp quyền camera cho FallGuard." : error.name === "NotFoundError" ? "Không tìm thấy webcam trên thiết bị này." : `Không thể mở webcam: ${error.message}`;
     const state = card?.querySelector(".webcam-state");
     if (state) { state.textContent = message; state.className = "webcam-state fall"; }
     else alert(message);
+  } finally {
+    if (webcamRequests.get(id) === request) webcamRequests.delete(id);
+    button.removeAttribute("aria-busy");
   }
 }, true);
 
@@ -150,6 +194,7 @@ function drawKeypointOverlay(item, keypoints, skeleton, fall, sourceWidth, sourc
 function stopWebcam(id, card) {
   const item = webcamStreams.get(id);
   if (!item) return;
+  item.request.abort();
   item.stream.getTracks().forEach(track => track.stop());
   clearInterval(item.timer);
   webcamStreams.delete(id);
@@ -162,6 +207,7 @@ function stopWebcam(id, card) {
 }
 
 function stopAllWebcams() {
+  for (const request of webcamRequests.values()) request.abort();
   for (const [id, item] of webcamStreams) stopWebcam(id, item.card);
 }
 
@@ -195,7 +241,7 @@ function playFallTone() {
 }
 
 function showFallAlert(message, meta = {}) {
-  window.showEmergencyDialog?.({ id: meta.event_id, camera_id: meta.camera_id, confidence: meta.confidence || 0, message, created_at: new Date().toISOString() });
+  window.showEmergencyDialog?.({ id: meta.event_id, camera_id: meta.camera_id, confidence: meta.confidence || 0, confidence_kind: meta.confidence_kind, message, created_at: new Date().toISOString() });
   document.querySelector(".fall-alert-toast")?.remove();
   const toast = document.createElement("div");
   toast.className = "fall-alert-toast";

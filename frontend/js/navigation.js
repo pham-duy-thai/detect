@@ -1,4 +1,18 @@
 const content = document.querySelector("#content");
+const mobileMenuButtons = document.querySelectorAll("#menu, .mobile-menu-button");
+const mobileMenuScrim = document.querySelector(".mobile-menu-scrim");
+const mobileSidebar = document.querySelector("#sidebar");
+const mobileMenuLayout = window.matchMedia("(max-width: 56.25rem)");
+let menuTrigger;
+
+function setMobileMenu(open, restoreFocus = false) {
+  mobileSidebar.classList.toggle("open", open);
+  mobileSidebar.inert = mobileMenuLayout.matches && !open;
+  mobileMenuScrim.hidden = !open;
+  mobileMenuButtons.forEach(button => button.setAttribute("aria-expanded", String(open)));
+  if (open) document.querySelector("#close").focus();
+  else if (restoreFocus) menuTrigger?.focus();
+}
 const pageNames = {
   dashboard: "Tổng quan", devices: "Camera & thiết bị", statistics: "Thống kê",
   security: "Bảo mật", account: "Quản lý tài khoản", profile: "Tài khoản",
@@ -17,9 +31,15 @@ function stopActiveWebcams() {
 
 function navigate(type, link) {
   document.querySelectorAll(".header-popup").forEach(popup => popup.remove());
-  document.querySelectorAll("[data-page]").forEach(item => item.classList.toggle("active", item === link));
+  document.querySelector(".header-bell")?.setAttribute("aria-expanded", "false");
+  document.querySelectorAll("[data-page]").forEach(item => {
+    const active = item.dataset.page === type && Boolean(item.closest(".sidebar, .mobile-nav"));
+    item.classList.toggle("active", active);
+    if (active) item.setAttribute("aria-current", "page");
+    else item.removeAttribute("aria-current");
+  });
   document.querySelector("#breadcrumb").textContent = pageNames[type] || type;
-  document.querySelector("#sidebar")?.classList.remove("open");
+  setMobileMenu(false);
   if (type !== "devices") stopActiveWebcams();
   if (type === "dashboard") renderDashboard();
   else if (type === "devices") loadCameras();
@@ -41,7 +61,16 @@ document.addEventListener("click", event => {
   navigate(link.dataset.page, link);
 }, true);
 
-document.querySelector("#menu").onclick = () => document.querySelector("#sidebar").classList.add("open");
-document.querySelector("#close").onclick = () => document.querySelector("#sidebar").classList.remove("open");
+mobileMenuButtons.forEach(button => button.addEventListener("click", () => {
+  menuTrigger = button;
+  setMobileMenu(true);
+}));
+document.querySelector("#close").onclick = () => setMobileMenu(false, true);
+mobileMenuScrim.onclick = () => setMobileMenu(false, true);
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !mobileMenuScrim.hidden) setMobileMenu(false, true);
+});
+mobileMenuLayout.addEventListener("change", () => setMobileMenu(false));
+setMobileMenu(false);
 if (window.smartHomeUser?.()) navigate("dashboard", document.querySelector('[data-page="dashboard"]'));
 window.addEventListener("fallguard:authenticated", () => navigate("dashboard", document.querySelector('[data-page="dashboard"]')));

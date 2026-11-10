@@ -38,11 +38,11 @@
           <div class="cl-login01__body">
             <span class="section-kicker">GIÁM SÁT AN TOÀN THÔNG MINH</span>
             <h1 class="cl-login01__title">${register ? "Tạo tài khoản" : "Chào mừng trở lại"}</h1>
-            <p class="cl-login01__sub">${register ? "Đăng ký để quản lý camera và cảnh báo té ngã." : "Đăng nhập để tiếp tục đến trung tâm giám sát FallGuard."}</p>
+            <p class="cl-login01__sub">${register ? "Tạo tài khoản bằng email hoặc số điện thoại. Admin duyệt trước khi bạn đăng nhập." : "Đăng nhập bằng email hoặc số điện thoại đã được duyệt."}</p>
             ${registerNotice ? `<p class="cl-login01__live">${escapeHtml(registerNotice)}</p>` : ""}
             <form class="cl-login01__form" id="auth-form" novalidate>
               ${register ? `<div class="cl-login01__field"><label class="cl-login01__label" for="name">Tên hiển thị</label><input class="cl-login01__input" type="text" id="name" maxlength="80" autocomplete="name" required></div>` : ""}
-              <div class="cl-login01__field"><label class="cl-login01__label" for="email">Email</label><input class="cl-login01__input" type="email" id="email" maxlength="254" autocomplete="email" required placeholder="ten@vidu.com"></div>
+              <div class="cl-login01__field"><label class="cl-login01__label" for="email">Email hoặc số điện thoại</label><input class="cl-login01__input" type="text" id="email" maxlength="254" autocomplete="username" required placeholder="ten@vidu.com hoặc 09xxxxxxxx"></div>
               <div class="cl-login01__field"><label class="cl-login01__label" for="password">Mật khẩu</label><div class="password-field"><input class="cl-login01__input" type="password" id="password" autocomplete="${register ? "new-password" : "current-password"}" required minlength="${register ? 10 : 1}" maxlength="128" placeholder="${register ? "Tối thiểu 10 ký tự, gồm chữ và số" : "Nhập mật khẩu"}"><button type="button" class="password-toggle" aria-label="Hiện mật khẩu">Hiện</button></div></div>
               ${register ? `<div class="cl-login01__field"><label class="cl-login01__label" for="confirm">Xác nhận mật khẩu</label><input class="cl-login01__input" type="password" id="confirm" autocomplete="new-password" required></div>` : ""}
               <p class="cl-login01__live" id="auth-error" role="alert" aria-live="polite"></p>
@@ -75,6 +75,7 @@
     };
     form.onsubmit = async event => {
       event.preventDefault();
+      if (!form.reportValidity()) return;
       error.textContent = "";
       const email = document.querySelector("#email").value.trim();
       const password = document.querySelector("#password").value;
@@ -112,7 +113,7 @@
     if (!state.token) {
       try {
         const config = await request("/auth/config");
-        renderAuth(false, config.registration_open ? "Tạo tài khoản quản trị đầu tiên để bắt đầu." : "", config.registration_open);
+        renderAuth(false, config.registration_open ? "Chưa có tài khoản? Đăng ký và chờ quản trị viên duyệt để đăng nhập." : "", config.registration_open);
       } catch {
         renderAuth(false, "Không kết nối được máy chủ. Hãy kiểm tra backend rồi thử lại.");
       }
@@ -156,7 +157,7 @@
       sessionStorage.removeItem("fallguard_signed_in");
       try {
         const config = await request("/auth/config");
-        renderAuth(false, config.registration_open ? "Phiên đã hết hạn. Tạo tài khoản quản trị để tiếp tục." : "Phiên đã hết hạn. Vui lòng đăng nhập lại.", config.registration_open);
+        renderAuth(false, "Phiên đã hết hạn. Vui lòng đăng nhập lại.", config.registration_open);
       } catch { renderAuth(false, "Không kết nối được máy chủ."); }
     }
   }

@@ -1,0 +1,13 @@
+{
+  "evaluation_unit": "40-frame windows, not fall events",
+  "windows": 14315,
+  "tn": 8402,
+  "fp": 829,
+  "fn": 1891,
+  "tp": 3193,
+  "accuracy": 0.809989521480964,
+  "recall": 0.6280487804878049,
+  "precision": 0.7938836399801094,
+  "checkpoint_sha256": "7c68bd9ced6e72ee38093873571a14138a394934e262671e0253a78bb7d2b914",
+  "limitations": "Existing test.npz provenance is not independently verified; overlapping windows are correlated."
+}

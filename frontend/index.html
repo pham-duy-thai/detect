@@ -19,10 +19,10 @@
   <link rel="stylesheet" href="css/pro.css">
   <link rel="stylesheet" href="css/webcam.css">
   <link rel="stylesheet" href="css/notifications.css">
-  <link rel="stylesheet" href="css/video-preview.css?v=6">
+  <link rel="stylesheet" href="css/video-preview.css?v=7">
   <link rel="stylesheet" href="login/style.css">
   <link rel="stylesheet" href="css/auth.css?v=2">
-  <link rel="stylesheet" href="css/account-pages.css?v=1">
+  <link rel="stylesheet" href="css/account-pages.css?v=7">
   <link rel="stylesheet" href="css/app-features.css?v=1">
   <link rel="stylesheet" href="css/app-features-extra.css?v=1">
   <link rel="stylesheet" href="css/app-features-media.css?v=1">
@@ -41,7 +41,8 @@
   <link rel="stylesheet" href="css/layout-fit.css?v=2">
   <link rel="stylesheet" href="css/carecam-md3-dark.css?v=3">
   <link rel="stylesheet" href="css/carecam-dark-fixes.css?v=8">
-  <link rel="stylesheet" href="css/responsive-fluid.css?v=7">
+  <link rel="stylesheet" href="css/responsive-fluid.css?v=9">
+  <link rel="stylesheet" href="css/notification-center.css?v=1">
 </head>
 <body>
   <div class="app">
@@ -53,19 +54,19 @@
       </div>
       <small>GIÁM SÁT</small>
       <nav id="nav" aria-label="Điều hướng chính">
-        <a class="active" data-page="dashboard"><span aria-hidden="true">▦</span><span>Tổng quan</span></a>
-        <a data-page="devices"><span aria-hidden="true">◉</span><span>Camera & thiết bị</span></a>
-        <a data-page="ai-config"><span aria-hidden="true">⌘</span><span>Cấu hình AI & vùng</span></a>
-        <a data-page="statistics"><span aria-hidden="true">◒</span><span>Thống kê</span></a>
-        <a data-page="security"><span aria-hidden="true">◇</span><span>Bảo mật</span></a>
-        <a data-page="account"><span aria-hidden="true">♙</span><span>Quản lý tài khoản</span></a>
+        <a class="active" href="#dashboard" data-page="dashboard"><span aria-hidden="true">▦</span><span>Tổng quan</span></a>
+        <a href="#devices" data-page="devices"><span aria-hidden="true">◉</span><span>Camera & thiết bị</span></a>
+        <a href="#ai-config" data-page="ai-config"><span aria-hidden="true">⌘</span><span>Cấu hình AI & vùng</span></a>
+        <a href="#statistics" data-page="statistics"><span aria-hidden="true">◒</span><span>Thống kê</span></a>
+        <a href="#security" data-page="security"><span aria-hidden="true">◇</span><span>Bảo mật</span></a>
+        <a href="#account" data-page="account"><span aria-hidden="true">♙</span><span>Quản lý tài khoản</span></a>
       </nav>
       <small>HỆ THỐNG</small>
       <nav aria-label="Cài đặt và thông báo">
-        <a data-page="messages"><span aria-hidden="true">♧</span><span>Thông báo</span></a>
-        <a data-page="profile"><span aria-hidden="true">◎</span><span>Tài khoản</span></a>
-        <a data-page="settings"><span aria-hidden="true">⚙</span><span>Cài đặt</span></a>
-        <a data-page="contacts"><span aria-hidden="true">♧</span><span>Liên hệ khẩn cấp</span></a>
+        <a href="#messages" data-page="messages"><span aria-hidden="true">♧</span><span>Thông báo</span></a>
+        <a href="#profile" data-page="profile"><span aria-hidden="true">◎</span><span>Tài khoản</span></a>
+        <a href="#settings" data-page="settings"><span aria-hidden="true">⚙</span><span>Cài đặt</span></a>
+        <a href="#contacts" data-page="contacts"><span aria-hidden="true">♧</span><span>Liên hệ khẩn cấp</span></a>
       </nav>
       <section class="system-health-widget" aria-label="Sức khỏe hệ thống">
         <div class="health-widget-title"><span class="material-symbols-rounded">memory</span><b>AI SERVER</b><i></i></div>
@@ -80,9 +81,16 @@
         <div><b>Admin</b><small>Quản trị viên</small></div>
       </div>
     </aside>
+    <button class="mobile-menu-scrim" type="button" aria-label="Đóng menu" tabindex="-1" hidden></button>
+    <nav class="mobile-nav" aria-label="Điều hướng nhanh">
+      <a href="#dashboard" data-page="dashboard"><span class="material-symbols-rounded" aria-hidden="true">dashboard</span>Tổng quan</a>
+      <a href="#devices" data-page="devices"><span class="material-symbols-rounded" aria-hidden="true">videocam</span>Camera</a>
+      <a href="#messages" data-page="messages"><span class="material-symbols-rounded" aria-hidden="true">notifications</span>Sự cố</a>
+      <button type="button" class="mobile-menu-button" aria-controls="sidebar" aria-expanded="false"><span class="material-symbols-rounded" aria-hidden="true">menu</span>Menu</button>
+    </nav>
     <main>
       <header>
-        <button id="menu" type="button" aria-label="Mở menu">☰</button>
+        <button id="menu" type="button" aria-label="Mở menu" aria-controls="sidebar" aria-expanded="false">☰</button>
         <div class="header-identity"><b>CareCam AI <span>•</span> Fall Detection System</b><small><i></i> <span id="system-online-label">System online</span></small></div>
         <b id="breadcrumb">Tổng quan</b>
         <span class="grow"></span>
@@ -100,19 +108,21 @@
     </main>
   </div>
   <script src="js/time-format.js?v=1"></script>
-  <script src="js/navigation.js?v=8"></script>
-  <script src="js/camera.js?v=13"></script>
-  <script src="js/camera-modal.js?v=3"></script>
-  <script src="js/webcam.js?v=10"></script>
-  <script src="js/notifications.js?v=12"></script>
+  <script src="js/score-label.js?v=1"></script>
+  <script src="js/notification-center.js?v=1"></script>
+  <script src="js/navigation.js?v=11"></script>
+  <script src="js/camera.js?v=16"></script>
+  <script src="js/camera-modal.js?v=4"></script>
+  <script src="js/webcam.js?v=13"></script>
+  <script src="js/notifications.js?v=14"></script>
   <script src="js/video-preview.js?v=7"></script>
-  <script src="js/auth.js?v=13"></script>
-  <script src="js/account.js?v=8"></script>
+  <script src="js/auth.js?v=15"></script>
+  <script src="js/account.js?v=13"></script>
   <script src="js/settings.js?v=4"></script>
-  <script src="js/analytics-pages.js?v=5"></script>
-  <script src="js/app-features.js?v=5"></script>
-  <script src="js/dashboard.js?v=10"></script>
-  <script src="js/header-actions.js?v=9"></script>
+  <script src="js/analytics-pages.js?v=6"></script>
+  <script src="js/app-features.js?v=8"></script>
+  <script src="js/dashboard.js?v=11"></script>
+  <script src="js/header-actions.js?v=10"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js'));

@@ -552,3 +552,124 @@ main {
     min-width: 0;
   }
 }
+
+/* Keep the account table scrollable rather than squeezing eight columns. */
+.app .account-table-scroll { overflow-x:auto; overscroll-behavior-x:contain; }
+.app .account-table { min-width:960px; max-width:none; }
+.app .account-table td:nth-child(3) { min-width:180px; }
+.app .account-table :is(th,td):nth-child(6) { white-space:nowrap; }
+.app .account-table input[type=checkbox] { width:16px; height:16px; min-height:16px; padding:0; }
+.app .account-actions .account-icon-action { width:40px; height:40px; min-width:40px; min-height:40px; padding:0; flex:0 0 40px; }
+.app .account-actions .material-symbols-rounded { white-space:nowrap; overflow-wrap:normal; word-break:normal; }
+@media(max-width:650px) {
+  .app .account-actions .account-icon-action { width:44px; height:44px; min-width:44px; min-height:44px; flex-basis:44px; }
+  .app .account-toolbar :is(input,select) { flex-basis:auto; }
+  .cl-login01__input { font-size:16px; }
+}
+
+.mobile-nav,
+.mobile-menu-scrim {
+  display: none;
+}
+
+@media (max-width: 56.25rem) {
+  .app > main {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-menu-scrim:not([hidden]) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    width: 100%;
+    border: 0;
+    background: #020617a8;
+  }
+
+  .app > .sidebar.open {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-nav {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 29;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .25rem;
+    padding: .4rem max(.65rem, env(safe-area-inset-right, 0px))
+      calc(.4rem + env(safe-area-inset-bottom, 0px)) max(.65rem, env(safe-area-inset-left, 0px));
+    background: #101c2d;
+    border-top: 1px solid #334155;
+    box-shadow: 0 -4px 20px #02061766;
+  }
+
+  .mobile-nav > :is(a, button) {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: .2rem;
+    min-height: 3rem;
+    min-width: 0;
+    padding: .3rem .125rem;
+    border: 0;
+    border-radius: .8rem;
+    background: transparent;
+    color: #cbd5e1;
+    font-family: inherit;
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    touch-action: manipulation;
+  }
+
+  .mobile-nav > a[aria-current="page"] {
+    color: #e0f2fe;
+    background: #164866;
+  }
+
+  .mobile-nav .material-symbols-rounded {
+    font-size: 1.35rem;
+  }
+
+  .app :is(#menu, #close, .delete-camera, #analyze, #retry-analysis, .analysis-diagnostics > summary) {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .app :is(#menu, #close, .delete-camera) {
+    min-width: 44px;
+  }
+}
+
+@media (max-width: 47.5rem) {
+  .camera-columns .upload-box {
+    min-height: 7.5rem;
+    height: auto;
+    padding: .875rem;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .camera-columns .analysis-diagnostics > summary {
+    display: list-item;
+    align-content: center;
+  }
+
+  .camera-preview .webcam-state {
+    left: .625rem;
+    right: .625rem;
+    bottom: 2rem;
+    width: fit-content;
+    max-width: calc(100% - 1.25rem);
+    padding: .4rem .6rem;
+    font-size: .75rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+}

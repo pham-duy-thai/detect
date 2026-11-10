@@ -1,0 +1,282 @@
+{
+  "split": "val",
+  "selection_metric": "clip-level F1",
+  "chosen": {
+    "lstm_confidence_threshold": 0.65,
+    "geometry_confirm_seconds": 0.2,
+    "tp": 377,
+    "fp": 68,
+    "tn": 547,
+    "fn": 119,
+    "recall": 0.7600806451612904,
+    "precision": 0.8471910112359551,
+    "f1": 0.8012752391073327
+  },
+  "trials": [
+    {
+      "lstm_confidence_threshold": 0.65,
+      "geometry_confirm_seconds": 0.2,
+      "tp": 377,
+      "fp": 68,
+      "tn": 547,
+      "fn": 119,
+      "recall": 0.7600806451612904,
+      "precision": 0.8471910112359551,
+      "f1": 0.8012752391073327
+    },
+    {
+      "lstm_confidence_threshold": 0.65,
+      "geometry_confirm_seconds": 0.35,
+      "tp": 376,
+      "fp": 68,
+      "tn": 547,
+      "fn": 120,
+      "recall": 0.7580645161290323,
+      "precision": 0.8468468468468469,
+      "f1": 0.8
+    },
+    {
+      "lstm_confidence_threshold": 0.65,
+      "geometry_confirm_seconds": 0.25,
+      "tp": 376,
+      "fp": 68,
+      "tn": 547,
+      "fn": 120,
+      "recall": 0.7580645161290323,
+      "precision": 0.8468468468468469,
+      "f1": 0.8
+    },
+    {
+      "lstm_confidence_threshold": 0.55,
+      "geometry_confirm_seconds": 0.2,
+      "tp": 387,
+      "fp": 85,
+      "tn": 530,
+      "fn": 109,
+      "recall": 0.780241935483871,
+      "precision": 0.8199152542372882,
+      "f1": 0.7995867768595041
+    },
+    {
+      "lstm_confidence_threshold": 0.55,
+      "geometry_confirm_seconds": 0.35,
+      "tp": 386,
+      "fp": 85,
+      "tn": 530,
+      "fn": 110,
+      "recall": 0.7782258064516129,
+      "precision": 0.8195329087048833,
+      "f1": 0.7983453981385729
+    },
+    {
+      "lstm_confidence_threshold": 0.55,
+      "geometry_confirm_seconds": 0.25,
+      "tp": 386,
+      "fp": 85,
+      "tn": 530,
+      "fn": 110,
+      "recall": 0.7782258064516129,
+      "precision": 0.8195329087048833,
+      "f1": 0.7983453981385729
+    },
+    {
+      "lstm_confidence_threshold": 0.65,
+      "geometry_confirm_seconds": 0.5,
+      "tp": 374,
+      "fp": 68,
+      "tn": 547,
+      "fn": 122,
+      "recall": 0.7540322580645161,
+      "precision": 0.8461538461538461,
+      "f1": 0.7974413646055437
+    },
+    {
+      "lstm_confidence_threshold": 0.55,
+      "geometry_confirm_seconds": 0.5,
+      "tp": 384,
+      "fp": 85,
+      "tn": 530,
+      "fn": 112,
+      "recall": 0.7741935483870968,
+      "precision": 0.8187633262260128,
+      "f1": 0.7958549222797927
+    },
+    {
+      "lstm_confidence_threshold": 0.75,
+      "geometry_confirm_seconds": 0.2,
+      "tp": 354,
+      "fp": 51,
+      "tn": 564,
+      "fn": 142,
+      "recall": 0.7137096774193549,
+      "precision": 0.8740740740740741,
+      "f1": 0.7857935627081021
+    },
+    {
+      "lstm_confidence_threshold": 0.75,
+      "geometry_confirm_seconds": 0.35,
+      "tp": 353,
+      "fp": 51,
+      "tn": 564,
+      "fn": 143,
+      "recall": 0.7116935483870968,
+      "precision": 0.8737623762376238,
+      "f1": 0.7844444444444445
+    },
+    {
+      "lstm_confidence_threshold": 0.75,
+      "geometry_confirm_seconds": 0.25,
+      "tp": 353,
+      "fp": 51,
+      "tn": 564,
+      "fn": 143,
+      "recall": 0.7116935483870968,
+      "precision": 0.8737623762376238,
+      "f1": 0.7844444444444445
+    },
+    {
+      "lstm_confidence_threshold": 0.75,
+      "geometry_confirm_seconds": 0.5,
+      "tp": 350,
+      "fp": 51,
+      "tn": 564,
+      "fn": 146,
+      "recall": 0.7056451612903226,
+      "precision": 0.8728179551122195,
+      "f1": 0.7803790412486065
+    },
+    {
+      "lstm_confidence_threshold": 0.85,
+      "geometry_confirm_seconds": 0.2,
+      "tp": 320,
+      "fp": 36,
+      "tn": 579,
+      "fn": 176,
+      "recall": 0.6451612903225806,
+      "precision": 0.898876404494382,
+      "f1": 0.7511737089201878
+    },
+    {
+      "lstm_confidence_threshold": 0.85,
+      "geometry_confirm_seconds": 0.25,
+      "tp": 317,
+      "fp": 36,
+      "tn": 579,
+      "fn": 179,
+      "recall": 0.6391129032258065,
+      "precision": 0.8980169971671388,
+      "f1": 0.7467608951707891
+    },
+    {
+      "lstm_confidence_threshold": 0.85,
+      "geometry_confirm_seconds": 0.35,
+      "tp": 315,
+      "fp": 36,
+      "tn": 579,
+      "fn": 181,
+      "recall": 0.6350806451612904,
+      "precision": 0.8974358974358975,
+      "f1": 0.743801652892562
+    },
+    {
+      "lstm_confidence_threshold": 0.85,
+      "geometry_confirm_seconds": 0.5,
+      "tp": 305,
+      "fp": 36,
+      "tn": 579,
+      "fn": 191,
+      "recall": 0.6149193548387096,
+      "precision": 0.8944281524926686,
+      "f1": 0.7287933094384708
+    },
+    {
+      "lstm_confidence_threshold": 0.9,
+      "geometry_confirm_seconds": 0.2,
+      "tp": 293,
+      "fp": 20,
+      "tn": 595,
+      "fn": 203,
+      "recall": 0.5907258064516129,
+      "precision": 0.9361022364217252,
+      "f1": 0.7243510506798516
+    },
+    {
+      "lstm_confidence_threshold": 0.9,
+      "geometry_confirm_seconds": 0.25,
+      "tp": 288,
+      "fp": 20,
+      "tn": 595,
+      "fn": 208,
+      "recall": 0.5806451612903226,
+      "precision": 0.935064935064935,
+      "f1": 0.7164179104477612
+    },
+    {
+      "lstm_confidence_threshold": 0.9,
+      "geometry_confirm_seconds": 0.35,
+      "tp": 285,
+      "fp": 20,
+      "tn": 595,
+      "fn": 211,
+      "recall": 0.5745967741935484,
+      "precision": 0.9344262295081968,
+      "f1": 0.7116104868913857
+    },
+    {
+      "lstm_confidence_threshold": 0.9,
+      "geometry_confirm_seconds": 0.5,
+      "tp": 271,
+      "fp": 20,
+      "tn": 595,
+      "fn": 225,
+      "recall": 0.5463709677419355,
+      "precision": 0.9312714776632303,
+      "f1": 0.6886912325285895
+    },
+    {
+      "lstm_confidence_threshold": 0.95,
+      "geometry_confirm_seconds": 0.2,
+      "tp": 248,
+      "fp": 6,
+      "tn": 609,
+      "fn": 248,
+      "recall": 0.5,
+      "precision": 0.9763779527559056,
+      "f1": 0.6613333333333333
+    },
+    {
+      "lstm_confidence_threshold": 0.95,
+      "geometry_confirm_seconds": 0.25,
+      "tp": 243,
+      "fp": 6,
+      "tn": 609,
+      "fn": 253,
+      "recall": 0.4899193548387097,
+      "precision": 0.9759036144578314,
+      "f1": 0.6523489932885906
+    },
+    {
+      "lstm_confidence_threshold": 0.95,
+      "geometry_confirm_seconds": 0.35,
+      "tp": 236,
+      "fp": 6,
+      "tn": 609,
+      "fn": 260,
+      "recall": 0.47580645161290325,
+      "precision": 0.9752066115702479,
+      "f1": 0.6395663956639567
+    },
+    {
+      "lstm_confidence_threshold": 0.95,
+      "geometry_confirm_seconds": 0.5,
+      "tp": 210,
+      "fp": 6,
+      "tn": 609,
+      "fn": 286,
+      "recall": 0.42338709677419356,
+      "precision": 0.9722222222222222,
+      "f1": 0.5898876404494382
+    }
+  ],
+  "note": "Replay calibration from recorded evidence; verify the chosen point in the production stream before testing."
+}

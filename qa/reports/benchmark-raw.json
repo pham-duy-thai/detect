@@ -1,0 +1,540 @@
+{
+  "mode": "raw",
+  "split": "provided test split",
+  "clips": 24,
+  "class_counts": {
+    "Fall": 12,
+    "No_Fall": 12
+  },
+  "settings": {
+    "fall_hold_seconds": 3,
+    "sensitivity": 0.55,
+    "schedule_enabled": false,
+    "schedule_start": "00:00",
+    "schedule_end": "23:59",
+    "show_skeleton": true,
+    "show_boxes": true,
+    "ignore_zones": [],
+    "priority_camera": null
+  },
+  "effective_hold_s": 4.1,
+  "clips_shorter_than_hold": 22,
+  "clips_with_no_valid_pose": 4,
+  "total_video_duration_s": 65.30644947485771,
+  "elapsed_s": 318.32,
+  "checkpoint_sha256": "7c68bd9ced6e72ee38093873571a14138a394934e262671e0253a78bb7d2b914",
+  "metrics": {
+    "geometry": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 12,
+      "fn": 12,
+      "recall": 0.0,
+      "precision": null,
+      "f1": 0.0,
+      "false_positive_video_rate": 0.0
+    },
+    "lstm": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 12,
+      "fn": 12,
+      "recall": 0.0,
+      "precision": null,
+      "f1": 0.0,
+      "false_positive_video_rate": 0.0
+    },
+    "strict_agreement": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 12,
+      "fn": 12,
+      "recall": 0.0,
+      "precision": null,
+      "f1": 0.0,
+      "false_positive_video_rate": 0.0
+    },
+    "fusion": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 12,
+      "fn": 12,
+      "recall": 0.0,
+      "precision": null,
+      "f1": 0.0,
+      "false_positive_video_rate": 0.0
+    }
+  },
+  "errors": [],
+  "videos": [
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\20240912_101331.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 56,
+      "duration_s": 1.8666666666666667,
+      "valid_pose_frames": 49,
+      "invalid_reasons": {
+        "head_not_confident": 1,
+        "person_box_too_short": 6
+      },
+      "elapsed_s": 9.544,
+      "processing_fps": 5.87,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\20240914132151.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 57,
+      "duration_s": 1.9,
+      "valid_pose_frames": 41,
+      "invalid_reasons": {
+        "head_not_confident": 14,
+        "person_box_too_short": 2
+      },
+      "elapsed_s": 5.68,
+      "processing_fps": 10.04,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\20240917151240.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 57,
+      "duration_s": 1.9,
+      "valid_pose_frames": 14,
+      "invalid_reasons": {
+        "person_box_too_short": 43
+      },
+      "elapsed_s": 5.07,
+      "processing_fps": 11.24,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\20240919201038.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 56,
+      "duration_s": 1.8666666666666667,
+      "valid_pose_frames": 22,
+      "invalid_reasons": {
+        "head_not_confident": 10,
+        "person_box_too_short": 24
+      },
+      "elapsed_s": 11.575,
+      "processing_fps": 4.84,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\C_D_0213.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 120,
+      "duration_s": 4.0,
+      "valid_pose_frames": 59,
+      "invalid_reasons": {
+        "head_not_confident": 60,
+        "person_box_too_short": 1
+      },
+      "elapsed_s": 17.812,
+      "processing_fps": 6.74,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\C_N_121_resized.mp4",
+      "label": "Fall",
+      "fps": 24.0,
+      "frames": 48,
+      "duration_s": 2.0,
+      "valid_pose_frames": 25,
+      "invalid_reasons": {
+        "head_not_confident": 23
+      },
+      "elapsed_s": 6.605,
+      "processing_fps": 7.27,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\C_N_42.mp4",
+      "label": "Fall",
+      "fps": 24.0,
+      "frames": 72,
+      "duration_s": 3.0,
+      "valid_pose_frames": 40,
+      "invalid_reasons": {
+        "person_box_too_short": 20,
+        "head_not_confident": 11,
+        "no_person": 1
+      },
+      "elapsed_s": 19.379,
+      "processing_fps": 3.72,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\S_D_0099_resized.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 90,
+      "duration_s": 3.0,
+      "valid_pose_frames": 31,
+      "invalid_reasons": {
+        "person_box_truncated_at_frame_edge": 20,
+        "head_not_confident": 39
+      },
+      "elapsed_s": 29.596,
+      "processing_fps": 3.04,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\S_F21_cam3.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 60,
+      "duration_s": 2.0,
+      "valid_pose_frames": 0,
+      "invalid_reasons": {
+        "head_not_confident": 10,
+        "person_box_too_short": 12,
+        "no_person": 38
+      },
+      "elapsed_s": 10.561,
+      "processing_fps": 5.68,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\S_M_41.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 90,
+      "duration_s": 3.0,
+      "valid_pose_frames": 51,
+      "invalid_reasons": {
+        "head_not_confident": 26,
+        "person_box_truncated_at_frame_edge": 13
+      },
+      "elapsed_s": 12.237,
+      "processing_fps": 7.35,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\S_N_362_resized.mp4",
+      "label": "Fall",
+      "fps": 24.0,
+      "frames": 48,
+      "duration_s": 2.0,
+      "valid_pose_frames": 48,
+      "invalid_reasons": {},
+      "elapsed_s": 9.36,
+      "processing_fps": 5.13,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\Fall\\Raw_Video\\S_N_95_resized.mp4",
+      "label": "Fall",
+      "fps": 30.0,
+      "frames": 90,
+      "duration_s": 3.0,
+      "valid_pose_frames": 61,
+      "invalid_reasons": {
+        "head_not_confident": 5,
+        "no_person": 24
+      },
+      "elapsed_s": 25.475,
+      "processing_fps": 3.53,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\B_D_0002.mp4",
+      "label": "No_Fall",
+      "fps": 30.0,
+      "frames": 60,
+      "duration_s": 2.0,
+      "valid_pose_frames": 60,
+      "invalid_reasons": {},
+      "elapsed_s": 8.567,
+      "processing_fps": 7.0,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\B_M_37.mp4",
+      "label": "No_Fall",
+      "fps": 30.2,
+      "frames": 61,
+      "duration_s": 2.019867549668874,
+      "valid_pose_frames": 0,
+      "invalid_reasons": {
+        "person_box_too_short": 61
+      },
+      "elapsed_s": 14.05,
+      "processing_fps": 4.34,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\B_N_354_resized.mp4",
+      "label": "No_Fall",
+      "fps": 24.0,
+      "frames": 144,
+      "duration_s": 6.0,
+      "valid_pose_frames": 0,
+      "invalid_reasons": {
+        "no_person": 53,
+        "head_not_confident": 89,
+        "person_box_too_short": 2
+      },
+      "elapsed_s": 29.271,
+      "processing_fps": 4.92,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\C0200.mp4",
+      "label": "No_Fall",
+      "fps": 30.0,
+      "frames": 57,
+      "duration_s": 1.9,
+      "valid_pose_frames": 57,
+      "invalid_reasons": {},
+      "elapsed_s": 8.234,
+      "processing_fps": 6.92,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\C_D_0194.mp4",
+      "label": "No_Fall",
+      "fps": 11.08,
+      "frames": 45,
+      "duration_s": 4.061371841155235,
+      "valid_pose_frames": 24,
+      "invalid_reasons": {
+        "head_not_confident": 19,
+        "no_person": 1,
+        "person_box_truncated_at_frame_edge": 1
+      },
+      "elapsed_s": 5.278,
+      "processing_fps": 8.53,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\C_N_12.mp4",
+      "label": "No_Fall",
+      "fps": 30.0,
+      "frames": 60,
+      "duration_s": 2.0,
+      "valid_pose_frames": 37,
+      "invalid_reasons": {
+        "head_not_confident": 8,
+        "person_box_truncated_at_frame_edge": 15
+      },
+      "elapsed_s": 3.582,
+      "processing_fps": 16.75,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\C_N_456_resized.mp4",
+      "label": "No_Fall",
+      "fps": 30.0,
+      "frames": 210,
+      "duration_s": 7.0,
+      "valid_pose_frames": 210,
+      "invalid_reasons": {},
+      "elapsed_s": 33.484,
+      "processing_fps": 6.27,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\S_D_0093_resized.mp4",
+      "label": "No_Fall",
+      "fps": 29.75,
+      "frames": 90,
+      "duration_s": 3.0252100840336134,
+      "valid_pose_frames": 30,
+      "invalid_reasons": {
+        "person_box_truncated_at_frame_edge": 58,
+        "head_not_confident": 2
+      },
+      "elapsed_s": 16.188,
+      "processing_fps": 5.56,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\S_M_57.mp4",
+      "label": "No_Fall",
+      "fps": 30.0,
+      "frames": 90,
+      "duration_s": 3.0,
+      "valid_pose_frames": 54,
+      "invalid_reasons": {
+        "head_not_confident": 9,
+        "person_box_truncated_at_frame_edge": 27
+      },
+      "elapsed_s": 9.187,
+      "processing_fps": 9.8,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\S_N_386_resized.mp4",
+      "label": "No_Fall",
+      "fps": 24.0,
+      "frames": 24,
+      "duration_s": 1.0,
+      "valid_pose_frames": 24,
+      "invalid_reasons": {},
+      "elapsed_s": 8.219,
+      "processing_fps": 2.92,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\W0165.mp4",
+      "label": "No_Fall",
+      "fps": 30.0,
+      "frames": 57,
+      "duration_s": 1.9,
+      "valid_pose_frames": 40,
+      "invalid_reasons": {
+        "head_not_confident": 17
+      },
+      "elapsed_s": 6.872,
+      "processing_fps": 8.3,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    },
+    {
+      "video": "fallandnofall\\split_dataset\\test\\No_Fall\\Raw_Video\\W0490.mp4",
+      "label": "No_Fall",
+      "fps": 30.0,
+      "frames": 56,
+      "duration_s": 1.8666666666666667,
+      "valid_pose_frames": 0,
+      "invalid_reasons": {
+        "head_not_confident": 56
+      },
+      "elapsed_s": 4.907,
+      "processing_fps": 11.41,
+      "first_detection_s": {
+        "geometry": null,
+        "lstm": null,
+        "strict_agreement": null,
+        "fusion": null
+      }
+    }
+  ],
+  "limitations": [
+    "Clip-level labels only; no verified fall-onset timestamps, so no detection-delay claim.",
+    "Subject/source overlap with training has not been independently verified.",
+    "CSV mode uses supplied poses and is not an end-to-end camera benchmark."
+  ]
+}

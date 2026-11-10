@@ -4,6 +4,30 @@
 This project aims to detect human falls from videos.  
 It uses **YOLOv8n-Pose** to extract 17 keypoints of the human body and an **LSTM model** to analyze the sequence of movements and classify them as either **Fall** or **No Fall (Normal Activity)**.
 
+The web backend also applies a two-frame torso-angle heuristic inspired by
+[Ambianic fall-detection](https://github.com/ambianic/fall-detection). It compares
+shoulder-to-hip tilt across poses roughly 0.5–2 seconds apart. A change of at
+least 60 degrees is motion evidence. A strong transition with both torso
+rotation and downward movement followed by a
+sustained horizontal pose can alert before the LSTM has 40 valid frames.
+Weaker geometric evidence requires a stable LSTM fall vote. A model-only fall
+vote is marked uncertain. The response includes `analysis.decision_source`
+and `analysis.confidence_kind`; scores are not measured real-world fall
+probabilities. This project keeps its existing YOLO pose model rather than
+installing TensorFlow/PoseNet.
+
+For the thesis comparison, `/api/analyze-video` returns
+`analysis_summary.ablation_first_detection_s` for geometry only, LSTM only,
+strict agreement and the new fusion decision. Save each API response and create
+a JSON manifest containing entries such as
+`{"label":"FALL","fall_time_s":2.4,"result":{...API response...}}` or
+`{"label":"NO_FALL","result":{...API response...}}`. Run
+`python evaluate_falls.py manifest.json` to obtain video-level recall,
+precision, false positive video rate and mean alert delay. These are
+video-level measures; they do not measure false alerts per live camera hour.
+Hold out whole
+people or original recordings from training when preparing the test manifest.
+
 ---
 
 ## Technologies Used  

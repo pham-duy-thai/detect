@@ -4,4 +4,6 @@
 
 .analysis-result .video-preview{height:min(62vh,520px);margin-top:14px}.analysis-result{scroll-margin-top:24px}
 
+.analysis-result.uncertain{display:block;border-color:#ead5aa;background:#fff9ed;color:#8a6429}.fall-video-banner.is-uncertain{background:#fff0ca;color:#805716}.analysis-diagnostics{margin-top:14px;padding-top:12px;border-top:1px solid #94a3b855;font-size:12px;line-height:1.7}.analysis-diagnostics summary{cursor:pointer;font-weight:650}.analysis-diagnostics ul{padding-left:20px}.analysis-diagnostics li{margin:7px 0}
+
 .video-result-caption{margin-top:12px;color:#33466a;font-size:12px;font-weight:700}

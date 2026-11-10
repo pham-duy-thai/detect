@@ -1,0 +1,63 @@
+{
+  "local_asset_count": 51,
+  "loaded_scripts": 16,
+  "missing_assets": [],
+  "javascript_syntax_errors": [],
+  "duplicate_scripts": [],
+  "navigation": [
+    {
+      "page": "dashboard",
+      "keyboard_link": true
+    },
+    {
+      "page": "devices",
+      "keyboard_link": true
+    },
+    {
+      "page": "ai-config",
+      "keyboard_link": true
+    },
+    {
+      "page": "statistics",
+      "keyboard_link": true
+    },
+    {
+      "page": "security",
+      "keyboard_link": true
+    },
+    {
+      "page": "account",
+      "keyboard_link": true
+    },
+    {
+      "page": "messages",
+      "keyboard_link": true
+    },
+    {
+      "page": "profile",
+      "keyboard_link": true
+    },
+    {
+      "page": "settings",
+      "keyboard_link": true
+    },
+    {
+      "page": "contacts",
+      "keyboard_link": true
+    },
+    {
+      "page": "dashboard",
+      "keyboard_link": true
+    },
+    {
+      "page": "devices",
+      "keyboard_link": true
+    },
+    {
+      "page": "messages",
+      "keyboard_link": true
+    }
+  ],
+  "visual_desktop_test": "blocked: browser access host and native Windows pipe unavailable",
+  "visual_mobile_test": "blocked: browser access host and native Windows pipe unavailable"
+}

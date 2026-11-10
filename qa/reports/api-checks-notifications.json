@@ -1,0 +1,265 @@
+{
+  "checks": [
+    {
+      "name": "Web application served",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Anonymous user list blocked",
+      "passed": true,
+      "actual": 401,
+      "expected": 401
+    },
+    {
+      "name": "Admin login",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Register qa-email@example.invalid",
+      "passed": true,
+      "actual": [
+        201,
+        "pending",
+        false
+      ],
+      "expected": [
+        201,
+        "pending",
+        false
+      ]
+    },
+    {
+      "name": "Pending login blocked qa-email@example.invalid",
+      "passed": true,
+      "actual": 403,
+      "expected": 403
+    },
+    {
+      "name": "Register 0912345678",
+      "passed": true,
+      "actual": [
+        201,
+        "pending",
+        false
+      ],
+      "expected": [
+        201,
+        "pending",
+        false
+      ]
+    },
+    {
+      "name": "Pending login blocked 0912345678",
+      "passed": true,
+      "actual": 403,
+      "expected": 403
+    },
+    {
+      "name": "Register qa-bulk@example.invalid",
+      "passed": true,
+      "actual": [
+        201,
+        "pending",
+        false
+      ],
+      "expected": [
+        201,
+        "pending",
+        false
+      ]
+    },
+    {
+      "name": "Pending login blocked qa-bulk@example.invalid",
+      "passed": true,
+      "actual": 403,
+      "expected": 403
+    },
+    {
+      "name": "Equivalent phone duplicate blocked",
+      "passed": true,
+      "actual": 409,
+      "expected": 409
+    },
+    {
+      "name": "Bad contact rejected",
+      "passed": true,
+      "actual": 422,
+      "expected": 422
+    },
+    {
+      "name": "All new registrations visible to admin",
+      "passed": true,
+      "actual": 3,
+      "expected": 3
+    },
+    {
+      "name": "Viewer cannot approve before login",
+      "passed": true,
+      "actual": 401,
+      "expected": 401
+    },
+    {
+      "name": "Admin approval qa-email@example.invalid",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Admin approval +84912345678",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Approved email login",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Approved phone login with local format",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Approved phone login with international format",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Viewer cannot list accounts",
+      "passed": true,
+      "actual": 403,
+      "expected": 403
+    },
+    {
+      "name": "Viewer cannot approve accounts",
+      "passed": true,
+      "actual": 403,
+      "expected": 403
+    },
+    {
+      "name": "Admin rejection",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Rejected login blocked",
+      "passed": true,
+      "actual": 403,
+      "expected": 403
+    },
+    {
+      "name": "Admin reapproval",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Reapproved login",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Existing session revoked after rejection",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "Wrong password rejected",
+      "passed": true,
+      "actual": 401,
+      "expected": 401
+    },
+    {
+      "name": "RTSP create rejected",
+      "passed": true,
+      "actual": 422,
+      "expected": 422
+    },
+    {
+      "name": "Browser webcam create allowed",
+      "passed": true,
+      "actual": 201,
+      "expected": 201
+    },
+    {
+      "name": "Live camera JPEG multipart accepted",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Live camera returns decision",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "Event preserves score type lstm_score",
+      "passed": true,
+      "actual": [
+        201,
+        "lstm_score"
+      ],
+      "expected": [
+        201,
+        "lstm_score"
+      ]
+    },
+    {
+      "name": "Event preserves score type pose_keypoint_quality",
+      "passed": true,
+      "actual": [
+        201,
+        "pose_keypoint_quality"
+      ],
+      "expected": [
+        201,
+        "pose_keypoint_quality"
+      ]
+    },
+    {
+      "name": "Mark one notification read",
+      "passed": true,
+      "actual": 200,
+      "expected": 200
+    },
+    {
+      "name": "Read state belongs to current user",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "Mark read is idempotent",
+      "passed": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "Reading one does not mark other notifications",
+      "passed": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "Missing notification read returns 404",
+      "passed": true,
+      "actual": 404,
+      "expected": 404
+    }
+  ],
+  "passed": 37,
+  "total": 37,
+  "isolated_data_dir": "C:\\detect\\qa\\runtime\\d17bcdf410"
+}
